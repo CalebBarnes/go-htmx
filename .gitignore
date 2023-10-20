@@ -1,2 +1,4 @@
 node_modules
 .dist
+tmp/build-errors.log
+tmp/main

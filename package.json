@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "air -c air.toml",
+    "dev": "air -c .air.toml",
     "watch": "tailwindcss build -i global.css -o static/css/tailwind.css --watch",
-    "build": "go build -o .dist/main.go",
+    "build": "go build -o .dist/main.go && tailwindcss build -i global.css -o static/css/tailwind.css",
     "start": "./.dist/main.go"
   },
   "keywords": [],
