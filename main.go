@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"fmt"
 	"time"
-	"flag"
 	"strconv"
 )
 
@@ -16,22 +15,20 @@ type Film struct {
 	Actor string
 }
 
+var version string = "development"
+
 func main() {
 	fmt.Println("Starting server on http://localhost:42069")
-
-	dev := flag.String("dev", "false", "a bool")
-	flag.Parse()
-	version := "1.0.0"	
-
+	versionHash := version
+		
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		log.Println("URL Requested: ", r.URL.Path)
-		if (*dev == "true") {
-			 version = strconv.FormatInt(time.Now().UnixNano(), 10)
+		if (version == "development") {
+			 versionHash = strconv.FormatInt(time.Now().UnixNano(), 10)
 		} 
 
 		if (r.URL.Path != "/") {
 			tmpl := template.Must(template.ParseFiles("templates/404.html"))
-			// http.Error(w, "404 Not Found", http.StatusNotFound)
 			tmpl.Execute(w, nil)
 			return
 		}
@@ -40,7 +37,7 @@ func main() {
 	
 		data := map[string]interface{
 		}{
-			"version":  version,
+			"Version":  versionHash,
 			"Films": []Film {
 				{
 					Title: "The Shawshank Redemption",
