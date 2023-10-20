@@ -68,5 +68,5 @@ func main() {
 
 	http.HandleFunc("/", handler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	log.Fatal(http.ListenAndServe(":42169", nil))
+	log.Fatal(http.ListenAndServe(":42069", nil))
 }
