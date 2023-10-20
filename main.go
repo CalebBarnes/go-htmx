@@ -21,13 +21,12 @@ func main() {
 
 	dev := flag.String("dev", "false", "a bool")
 	flag.Parse()
-	version := "1.0.0"
-	
+	version := "1.0.0"	
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		log.Println("URL Requested: ", r.URL.Path)
 		if (*dev == "true") {
-			 version = strconv.FormatInt(time.Now().Unix(), 10)
+			 version = strconv.FormatInt(time.Now().UnixNano(), 10)
 		} 
 
 		if (r.URL.Path != "/") {
@@ -69,5 +68,5 @@ func main() {
 
 	http.HandleFunc("/", handler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	log.Fatal(http.ListenAndServe(":42069", nil))
+	log.Fatal(http.ListenAndServe(":42169", nil))
 }

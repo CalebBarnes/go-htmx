@@ -8,6 +8,13 @@
     "**/Thumbs.db": true,
     // "**/.gitignore": true,
     "**/node_modules": true,
-    "**/tmp": true
+    "**/tmp": true,
+    "**/.dist": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/tmp": true,
+    "**/.dist": true
   }
 }
