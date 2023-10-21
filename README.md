@@ -12,13 +12,16 @@
 ## Getting Started
 
 To build and serve the application:
-`pnpm start`
+
+- `pnpm start`
 
 To run the Go webserver in development mode:
-`air`
 
-Tailwind CSS JIT
-`pnpm run watch`
+- `air`
+
+Tailwind CSS JIT compiler to watch for changes in the html templates and rebuild the CSS
+
+- `pnpm run watch`
 
 Browsersync to auto refresh the browser when files change
 
