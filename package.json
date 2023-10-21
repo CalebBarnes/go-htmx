@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "air & p test & p watch",
+    "dev": "air & npm run browser-sync & npm run watch",
     "watch": "tailwindcss build -i global.css -o static/css/tailwind.css --watch",
     "build": "go build -o .dist/main.go -ldflags \"-X 'main.version=$(git rev-parse HEAD)'\" && tailwindcss build -i global.css -o static/css/tailwind.css",
-    "start": "pnpm run build && ./.dist/main.go",
+    "start": "npm run build && ./.dist/main.go",
     "browser-sync": "browser-sync start --proxy localhost:42069 --files 'static/css/*.css, templates/*.html, *.go' --no-notify"
   },
   "keywords": [],
