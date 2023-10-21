@@ -20,5 +20,6 @@ To run the Go webserver in development mode:
 Tailwind CSS JIT
 `pnpm run watch`
 
-Browsersync
-`pnpm run browser-sync`
+Browsersync to auto refresh the browser when files change
+
+- `pnpm run browser-sync`
