@@ -11,7 +11,7 @@
 
 ## Getting Started
 
-To build and serve the application:
+To build and serve the application in production mode:
 
 - `pnpm start`
 
