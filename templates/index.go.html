@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  {{ template "head" . }}
+
+  <body class="min-h-screen flex flex-col justify-between">
+    <div>
+      <div class="shadow-md">
+        <nav
+          class="max-w-screen-2xl mx-auto p-5 flex justify-between items-center"
+        >
+          <a href="/">Cookie's Go-HTMX Project </a>
+          <div class="ml-auto flex">
+            <a href="/test">Test route</a>
+          </div>
+        </nav>
+      </div>
+      <main class="max-w-screen-2xl mx-auto">
+        <h1 class="my-5">Welcome to my Go HTMX project</h1>
+
+        <!-- <div class="border-2 p-5 inline-block mb-10">
+          <h2>Technologies</h2>
+          <ul>
+            <li>Go</li>
+            <li>HTMX</li>
+            <li>Tailwind</li>
+          </ul>
+        </div> -->
+
+        {{ template "films" . }}
+      </main>
+    </div>
+
+    {{ template "footer" . }}
+  </body>
+</html>

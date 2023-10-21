@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"time"
 	"strconv"
-	// "database/sql"
-	"os/exec"
 )
+
+type Seo struct {
+	Title string
+	Description string
+}
 
 type Film struct {
 	Title string
@@ -28,25 +31,25 @@ func main() {
 		if (version == "development") {
 			versionHash = strconv.FormatInt(time.Now().UnixNano(), 10)
 		}
-		
-		if (r.URL.Path == "/_webhook/git-pull") {
-			handleGitPull()
-			return
-		}
 
 		if (r.URL.Path != "/") {
-			tmpl := template.Must(template.ParseFiles("templates/404.html"))
-			tmpl.Execute(w, nil)
+			http.NotFound(w, r)
 			return
 		}
 
-		tmpl := template.Must(template.ParseFiles("templates/index.html"))
-	
 		data := map[string]interface{
 		}{
 			"Version":  versionHash,
-			"Films": getFilms(),	
+			"Name": "Hello from my nested template!",
+			"Films": getFilms(),
+			"Seo": Seo{
+				Title: "This is the SEO title",
+				Description: "This is the SEO description",
+			},
 		}
+
+		tmpl := template.Must(template.ParseFiles("templates/index.go.html"))
+		template.Must(tmpl.ParseGlob("components/*.go.html"))
 
 		tmpl.Execute(w, data)
 	}
@@ -77,32 +80,4 @@ func getFilms() []Film {
 			Actor: "Christian Bale",
 		},
 	}
-}
-
-
-func handleGitPull() {
-	// secret: wqaeKr65XJZiSL
-	// create a new *Cmd instance
-	// here we pass the command as the first argument and the arguments to pass to the command as the
-	// remaining arguments in the function
-	cmd := exec.Command("git", "pull")
-
-	// The `Output` method executes the command and
-	// collects the output, returning its value
-	out, err := cmd.Output()
-	if err != nil {
-	// if there was any error, print it here
-	fmt.Println("could not run command 'git pull': ", err)
-	}
-	// otherwise, print the output from running the command
-	fmt.Println("Output: ", string(out))
-
-	cmd2 := exec.Command("npm", "run", "build")
-	out2, err2 := cmd2.Output()
-	if err2 != nil {
-	// if there was any error, print it here
-	fmt.Println("could not run command 'npm run build': ", err)
-	}
-	// otherwise, print the output from running the command
-	fmt.Println("Output: ", string(out2))
 }
