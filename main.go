@@ -13,13 +13,6 @@ type Seo struct {
 	Description string
 }
 
-type Film struct {
-	Title string
-	Director string
-	Year int
-	Actor string
-}
-
 var version string = "development"
 
 func main() {
@@ -57,6 +50,14 @@ func main() {
 	http.HandleFunc("/", requestHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	log.Fatal(http.ListenAndServe(":42069", nil))
+}
+
+
+type Film struct {
+	Title string
+	Director string
+	Year int
+	Actor string
 }
 
 func getFilms() []Film {
