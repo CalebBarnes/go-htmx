@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 	"strconv"
+	"github.com/jmoiron/sqlx"
 )
 
 type Seo struct {
@@ -30,15 +31,19 @@ func main() {
 			return
 		}
 
+
+		pageDataTest := getPageFromDBByUrl(r.URL.Path)
+
+		pageData := getPageData(r.URL.Path)
+
 		data := map[string]interface{
 		}{
 			"Version":  versionHash,
-			"Name": "Hello from my nested template!",
-			"Films": getFilms(),
 			"Seo": Seo{
-				Title: "This is the SEO title",
+				Title: pageData.Title,
 				Description: "This is the SEO description",
 			},
+			"Data": pageData,
 		}
 
 		tmpl := template.Must(template.ParseFiles("templates/index.go.html"))
@@ -53,32 +58,72 @@ func main() {
 }
 
 
-type Film struct {
-	Title string
-	Director string
-	Year int
-	Actor string
+type Blocker interface{}
+
+type Page struct {
+    Url    string    `json:"Url"`
+    Title  string    `json:"Title"`
+    Blocks []Blocker `json:"Blocks"`
 }
 
-func getFilms() []Film {
-	return []Film {
-		{
-			Title: "The Shawshank Redemption",
-			Director: "Frank Darabont",
-			Year: 1994,
-			Actor: "Tim Robbins",
-		},
-		{
-			Title: "The Godfather",
-			Director: "Francis Ford Coppola",
-			Year: 1972,
-			Actor: "Marlon Brando",
-		},
-		{
-			Title: "The Dark Knight",
-			Director: "Christopher Nolan",
-			Year: 2008,
-			Actor: "Christian Bale",
-		},
-	}
+func getPageData(Url string) Page {
+    fmt.Println("getPageData: ", Url)
+
+    return Page{
+        Url:   "/",
+        Title: "Cookie's go-htmx - Home",
+    }
 }
+
+
+func getPageFromDBByUrl(pageUrl string) (Page, error) {
+	db, err := sqlx.Connect("postgres", "postgresql://directus@localhost:5432/directus")
+
+	if err != nil {
+		return Page{}, err
+	}
+	defer db.Close()
+
+	var page Page
+	err = db.Get(&page, "SELECT id, url, title FROM pages WHERE url = $1", pageUrl)
+	if err != nil {
+		return Page{}, err
+	}
+
+	// blocks, err := getBlocksFromDB(db, page.ID)
+	// if err != nil {
+	// 	return Page{}, err
+	// }
+
+	// page.Blocks = blocks
+	return page, nil
+}
+
+
+
+
+// func getBlocksFromDB(pageID int) ([]map[string]interface{}, error) {
+// 	db, err := sqlx.Connect("postgres", "your_connection_string")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	rows, err := db.Queryx("SELECT * FROM blocks WHERE page_id = $1", pageID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	var blocks []map[string]interface{}
+
+// 	for rows.Next() {
+// 		rowMap := make(map[string]interface{})
+// 		err := rows.MapScan(rowMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		blocks = append(blocks, rowMap)
+// 	}
+
+// 	return blocks, nil
+// }
