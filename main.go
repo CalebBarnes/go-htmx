@@ -1,11 +1,13 @@
 package main
+
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
-	"fmt"
-	"time"
 	"strconv"
+	"time"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -25,15 +27,16 @@ func main() {
 		if (version == "development") {
 			versionHash = strconv.FormatInt(time.Now().UnixNano(), 10)
 		}
-
+		
 		if (r.URL.Path != "/") {
 			http.NotFound(w, r)
 			return
 		}
-
-
+		
+		
 		pageDataTest := getPageFromDBByUrl(r.URL.Path)
-
+		log.Println("pageDataTest: ", pageDataTest)
+		
 		pageData := getPageData(r.URL.Path)
 
 		data := map[string]interface{
