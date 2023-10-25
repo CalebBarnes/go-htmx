@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -14,6 +15,15 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// This function tries to execute a specific template by its name and returns its content as a string or an error.
+func executeTemplate(tc *template.Template, name string, data interface{}) (string, error) {
+	buf := &bytes.Buffer{}
+	err := tc.ExecuteTemplate(buf, name, data)
+	return buf.String(), err
+}
+
+
+
 type Seo struct {
 	Title string
 	Description string
@@ -25,6 +35,8 @@ func main() {
 	fmt.Println("Starting server on http://localhost:42069")
 	versionHash := version
 		
+
+
 	requestHandler := func(w http.ResponseWriter, r *http.Request) {
 		log.Println("URL Requested: ", r.URL.Path)
 		if (version == "development") {
@@ -55,10 +67,27 @@ func main() {
 					},
 					"Data": pageData,
 				}
-		
-				tmpl := template.Must(template.ParseFiles("templates/index.go.html"))
-				template.Must(tmpl.ParseGlob("components/*.go.html"))
-				tmpl.Execute(w, data)
+
+				tmpl, err := template.ParseFiles("templates/index.go.html")
+				if err != nil {
+					log.Fatalf("Error parsing main template: %v", err)
+				}
+
+				tmpl, err = tmpl.ParseGlob("components/*.go.html")
+				if err != nil {
+					log.Fatalf("Error parsing component templates: %v", err)
+				}
+
+				tmpl, err = tmpl.ParseGlob("components/blocks/*.go.html")
+				if err != nil {
+					log.Fatalf("Error parsing block templates: %v", err)
+				}
+
+				if err := tmpl.Execute(w, data); err != nil {
+					log.Println("Error executing template:", err)
+				}
+
+
 		}
 	}
 
@@ -111,8 +140,6 @@ func getPageData(pageUrl string) (Page, error) {
 	err = db.Select(&blocksDatas, "SELECT collection, id, item, page_id, sort FROM page_blocks WHERE page_id = $1", page.ID)
 	if err != nil {
 		fmt.Println(err)
-	} else {
-		fmt.Println("blocksDatas:", blocksDatas)
 	}
 
 	blocks := make([]Block, 0) // Initialize the Blocks map
@@ -151,3 +178,4 @@ func getPageData(pageUrl string) (Page, error) {
 
 	return page, nil
 }
+

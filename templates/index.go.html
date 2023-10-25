@@ -7,8 +7,16 @@
       {{ template "navbar" . }}
 
       <main class="max-w-screen-2xl mx-auto p-5">
-        <div>Content here</div>
-        {{ .Data.Blocks }}
+        {{ range .Data.Blocks }}
+          <div class="flex border border-red-500 m-5 p-5 rounded">
+            <span class="mr-2">
+              {{ .Collection }}: 
+            </span>
+            <span>
+              {{ .Data}}
+            </span>
+          </div>
+        {{ end }}  
       </main>
     </div>
 
