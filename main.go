@@ -6,15 +6,12 @@ import (
 	"fmt"
 	"time"
 	"strconv"
-	// "database/sql"
-	"os/exec"
+	"github.com/jmoiron/sqlx"
 )
 
-type Film struct {
+type Seo struct {
 	Title string
-	Director string
-	Year int
-	Actor string
+	Description string
 }
 
 var version string = "development"
@@ -28,49 +25,29 @@ func main() {
 		if (version == "development") {
 			versionHash = strconv.FormatInt(time.Now().UnixNano(), 10)
 		}
-		
-		if (r.URL.Path == "/_webhook/git-pull") {
-			// secret: wqaeKr65XJZiSL
-			// create a new *Cmd instance
-			// here we pass the command as the first argument and the arguments to pass to the command as the
-			// remaining arguments in the function
-			cmd := exec.Command("git", "pull")
-
-			// The `Output` method executes the command and
-			// collects the output, returning its value
-			out, err := cmd.Output()
-			if err != nil {
-			// if there was any error, print it here
-			fmt.Println("could not run command 'git pull': ", err)
-			}
-			// otherwise, print the output from running the command
-			fmt.Println("Output: ", string(out))
-	
-			cmd2 := exec.Command("npm", "run", "build")
-			out2, err2 := cmd2.Output()
-			if err2 != nil {
-			// if there was any error, print it here
-			fmt.Println("could not run command 'npm run build': ", err)
-			}
-			// otherwise, print the output from running the command
-			fmt.Println("Output: ", string(out2))
-
-			return
-		}
 
 		if (r.URL.Path != "/") {
-			tmpl := template.Must(template.ParseFiles("templates/404.html"))
-			tmpl.Execute(w, nil)
+			http.NotFound(w, r)
 			return
 		}
 
-		tmpl := template.Must(template.ParseFiles("templates/index.html"))
-	
+
+		pageDataTest := getPageFromDBByUrl(r.URL.Path)
+
+		pageData := getPageData(r.URL.Path)
+
 		data := map[string]interface{
 		}{
 			"Version":  versionHash,
-			"Films": getFilms(),	
+			"Seo": Seo{
+				Title: pageData.Title,
+				Description: "This is the SEO description",
+			},
+			"Data": pageData,
 		}
+
+		tmpl := template.Must(template.ParseFiles("templates/index.go.html"))
+		template.Must(tmpl.ParseGlob("components/*.go.html"))
 
 		tmpl.Execute(w, data)
 	}
@@ -80,25 +57,73 @@ func main() {
 	log.Fatal(http.ListenAndServe(":42069", nil))
 }
 
-func getFilms() []Film {
-	return []Film {
-		{
-			Title: "The Shawshank Redemption",
-			Director: "Frank Darabont",
-			Year: 1994,
-			Actor: "Tim Robbins",
-		},
-		{
-			Title: "The Godfather",
-			Director: "Francis Ford Coppola",
-			Year: 1972,
-			Actor: "Marlon Brando",
-		},
-		{
-			Title: "The Dark Knight",
-			Director: "Christopher Nolan",
-			Year: 2008,
-			Actor: "Christian Bale",
-		},
-	}
+
+type Blocker interface{}
+
+type Page struct {
+    Url    string    `json:"Url"`
+    Title  string    `json:"Title"`
+    Blocks []Blocker `json:"Blocks"`
 }
+
+func getPageData(Url string) Page {
+    fmt.Println("getPageData: ", Url)
+
+    return Page{
+        Url:   "/",
+        Title: "Cookie's go-htmx - Home",
+    }
+}
+
+
+func getPageFromDBByUrl(pageUrl string) (Page, error) {
+	db, err := sqlx.Connect("postgres", "postgresql://directus@localhost:5432/directus")
+
+	if err != nil {
+		return Page{}, err
+	}
+	defer db.Close()
+
+	var page Page
+	err = db.Get(&page, "SELECT id, url, title FROM pages WHERE url = $1", pageUrl)
+	if err != nil {
+		return Page{}, err
+	}
+
+	// blocks, err := getBlocksFromDB(db, page.ID)
+	// if err != nil {
+	// 	return Page{}, err
+	// }
+
+	// page.Blocks = blocks
+	return page, nil
+}
+
+
+
+
+// func getBlocksFromDB(pageID int) ([]map[string]interface{}, error) {
+// 	db, err := sqlx.Connect("postgres", "your_connection_string")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	rows, err := db.Queryx("SELECT * FROM blocks WHERE page_id = $1", pageID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	var blocks []map[string]interface{}
+
+// 	for rows.Next() {
+// 		rowMap := make(map[string]interface{})
+// 		err := rows.MapScan(rowMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		blocks = append(blocks, rowMap)
+// 	}
+
+// 	return blocks, nil
+// }

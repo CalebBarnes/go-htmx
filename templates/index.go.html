@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  {{ template "head" . }}
+
+  <body class="min-h-screen flex flex-col justify-between">
+    <div>
+      {{ template "navbar" . }}
+
+      <main class="max-w-screen-2xl mx-auto p-5">
+        <div>Content here</div>
+        {{ .Data }}
+      </main>
+    </div>
+
+    {{ template "footer" . }}
+  </body>
+</html>
