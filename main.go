@@ -15,13 +15,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// This function tries to execute a specific template by its name and returns its content as a string or an error.
-// func executeTemplate(tc *template.Template, name string, data interface{}) (string, error) {
-// 	buf := &bytes.Buffer{}
-// 	err := tc.ExecuteTemplate(buf, name, data)
-// 	return buf.String(), err
-// }
-
 type Seo struct {
 	Title string
 	Description string
@@ -34,11 +27,10 @@ func main() {
 	versionHash := version
 		
 	requestHandler := func(w http.ResponseWriter, r *http.Request) {
-		// log.Println("URL Requested: ", r.URL.Path)
 		if (version == "development") {
 			versionHash = strconv.FormatInt(time.Now().UnixNano(), 10)
-		}	
-		
+		}
+
 		pageData, err := getPageData(r.URL.Path)
 		
 		if err != nil {
@@ -53,7 +45,6 @@ func main() {
 			tmpl.Execute(w, data)
 			
 		} else {
-			// log.Println("pageData: ", pageData)
 			data := map[string]interface{
 				}{
 					"Version":  versionHash,
@@ -63,57 +54,31 @@ func main() {
 					},
 					"Data": pageData,
 				}
-
-				tmpl, err := template.ParseFiles("templates/index.go.html")
-				tmpl.Funcs(template.FuncMap{
-					// Render HTML inside a template without escaping it (or any other strings)
-					"noescape": func(str string) template.HTML {
-						return template.HTML(str)
-					},
-				})
-				if err != nil {
-					log.Fatalf("Error parsing main template: %v", err)
-				}
-
-				tmpl, err = tmpl.ParseGlob("components/*.go.html")
-				if err != nil {
-					log.Fatalf("Error parsing component templates: %v", err)
-				}
-
-				tmpl, err = tmpl.ParseGlob("components/blocks/*.go.html")
-				if err != nil {
-					log.Fatalf("Error parsing block templates: %v", err)
-				}
-
-				// blockBuilderStr := `
-				// {{ define "blocks" }}    
-				// 	{{ range .Data.Blocks }}
-				// 		{{ if eq .Collection "block_hero" }}
-				// 			{{ template "block_hero" .Data }}
-				// 		{{ else if eq .Collection "block_hero" }}
-				// 			{{ template "block_hero" .Data }}
-				// 		{{ end }}
-				// 	{{ end }} 
-				// {{ end }}
-				// `
-				// blockBuilderStr := `
-				// {{ define "blocks" }}    
-				// 	{{ range .Data.Blocks }}
-				// 		{{ if eq .Collection "block_hero" }}
-				// 			{{ template "block_hero" .Data }}
-				// 		{{ else if eq .Collection "block_hero" }}
-				// 			{{ template "block_hero" .Data }}
-				// 		{{ end }}
-				// 	{{ end }} 
-				// {{ end }}
-				// `
-
-
-				if err := tmpl.Execute(w, data); err != nil {
-					log.Println("Error executing template:", err)
-				}
-
-
+			tmpl, err := template.ParseFiles("templates/index.go.html")
+			if err != nil {
+				log.Fatalf("Error parsing main template: %v", err)
+			}
+			tmpl.Funcs(template.FuncMap{
+				// Render HTML in a template without escaping it (or any other strings)
+				"noescape": func(str string) template.HTML {
+					return template.HTML(str)
+				},
+			})
+			tmpl, err = tmpl.ParseGlob("components/*.go.html")
+			if err != nil {
+				log.Fatalf("Error parsing component templates: %v", err)
+			}
+			tmpl, err = tmpl.ParseGlob("components/blocks/*.go.html")
+			if err != nil {
+				log.Fatalf("Error parsing block templates: %v", err)
+			}
+			tmpl, err = tmpl.Parse(blocksTemplateBuilder(pageData.Blocks))
+			if err != nil {
+				log.Fatalf("Error parsing block templates: %v", err)
+			}
+			if err := tmpl.Execute(w, data); err != nil {
+				log.Println("Error executing template:", err)
+			}
 		}
 	}
 
@@ -143,7 +108,6 @@ type Block struct {
 	Data map[string]interface{}
 }
 
-
 func getPageData(pageUrl string) (Page, error) {
 	connectionString := "user=directus dbname=directus password=Y25GUFMNeaGpEd sslmode=disable"
 	if (version == "development") {
@@ -168,7 +132,7 @@ func getPageData(pageUrl string) (Page, error) {
 	}
 
 	var blocksDatas []BlockData
-	err = db.Select(&blocksDatas, "SELECT collection, id, item, page_id, sort FROM page_blocks WHERE page_id = $1", page.ID)
+	err = db.Select(&blocksDatas, "SELECT collection, id, item, page_id, sort FROM page_blocks WHERE page_id = $1 ORDER BY sort ASC", page.ID)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -195,19 +159,36 @@ func getPageData(pageUrl string) (Page, error) {
                 var deserializedData interface{}
                 if err := json.Unmarshal(byteValue, &deserializedData); err == nil {
                     block.Data[key] = deserializedData
-                } else {
-                    fmt.Println("Failed to unmarshal:", err)
                 }
+				// else {
+                //     fmt.Println("Failed to unmarshal:", err)
+                // }
             }
         }
-        
         // Append to the overall list of blocks.
         blocks = append(blocks, block)
-		// fmt.Println(blocks)
 	}
 
 	page.Blocks = blocks
-
 	return page, nil
 }
 
+func blocksTemplateBuilder(blocks []Block)(string){
+	blockBuilderStr := `
+	{{ define "blocks" }}    
+		{{ range .Data.Blocks }}
+			{{ if eq .Collection "a" }}
+				`
+			for _, block := range blocks {
+				blockBuilderStr+=`
+					{{ else if eq .Collection "`+block.Collection+`" }}
+						{{ template "`+block.Collection+`" .Data }}
+				`
+			}
+				blockBuilderStr+=`
+			{{ end }}
+		{{ end }} 
+	{{ end }}
+	`
+	return blockBuilderStr
+}

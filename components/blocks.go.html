@@ -1,9 +1,0 @@
-{{ define "blocks" }}    
-    {{ range .Data.Blocks }}
-        {{ if eq .Collection "block_hero" }}
-            {{ template "block_hero" .Data }}
-        {{ else if eq .Collection "block_text" }}
-            {{ template "block_text" .Data }}
-        {{ end }}
-    {{ end }} 
-{{ end }}
