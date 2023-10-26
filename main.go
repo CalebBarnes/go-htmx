@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytes"
+	// "bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -16,13 +16,11 @@ import (
 )
 
 // This function tries to execute a specific template by its name and returns its content as a string or an error.
-func executeTemplate(tc *template.Template, name string, data interface{}) (string, error) {
-	buf := &bytes.Buffer{}
-	err := tc.ExecuteTemplate(buf, name, data)
-	return buf.String(), err
-}
-
-
+// func executeTemplate(tc *template.Template, name string, data interface{}) (string, error) {
+// 	buf := &bytes.Buffer{}
+// 	err := tc.ExecuteTemplate(buf, name, data)
+// 	return buf.String(), err
+// }
 
 type Seo struct {
 	Title string
@@ -35,10 +33,8 @@ func main() {
 	fmt.Println("Starting server on http://localhost:42069")
 	versionHash := version
 		
-
-
 	requestHandler := func(w http.ResponseWriter, r *http.Request) {
-		log.Println("URL Requested: ", r.URL.Path)
+		// log.Println("URL Requested: ", r.URL.Path)
 		if (version == "development") {
 			versionHash = strconv.FormatInt(time.Now().UnixNano(), 10)
 		}	
@@ -57,7 +53,7 @@ func main() {
 			tmpl.Execute(w, data)
 			
 		} else {
-			log.Println("pageDataTest: ", pageData)
+			// log.Println("pageData: ", pageData)
 			data := map[string]interface{
 				}{
 					"Version":  versionHash,
@@ -69,6 +65,12 @@ func main() {
 				}
 
 				tmpl, err := template.ParseFiles("templates/index.go.html")
+				tmpl.Funcs(template.FuncMap{
+					// Render HTML inside a template without escaping it (or any other strings)
+					"noescape": func(str string) template.HTML {
+						return template.HTML(str)
+					},
+				})
 				if err != nil {
 					log.Fatalf("Error parsing main template: %v", err)
 				}
@@ -82,6 +84,30 @@ func main() {
 				if err != nil {
 					log.Fatalf("Error parsing block templates: %v", err)
 				}
+
+				// blockBuilderStr := `
+				// {{ define "blocks" }}    
+				// 	{{ range .Data.Blocks }}
+				// 		{{ if eq .Collection "block_hero" }}
+				// 			{{ template "block_hero" .Data }}
+				// 		{{ else if eq .Collection "block_hero" }}
+				// 			{{ template "block_hero" .Data }}
+				// 		{{ end }}
+				// 	{{ end }} 
+				// {{ end }}
+				// `
+				// blockBuilderStr := `
+				// {{ define "blocks" }}    
+				// 	{{ range .Data.Blocks }}
+				// 		{{ if eq .Collection "block_hero" }}
+				// 			{{ template "block_hero" .Data }}
+				// 		{{ else if eq .Collection "block_hero" }}
+				// 			{{ template "block_hero" .Data }}
+				// 		{{ end }}
+				// 	{{ end }} 
+				// {{ end }}
+				// `
+
 
 				if err := tmpl.Execute(w, data); err != nil {
 					log.Println("Error executing template:", err)
@@ -119,9 +145,14 @@ type Block struct {
 
 
 func getPageData(pageUrl string) (Page, error) {
-	db, err := sqlx.Connect("postgres", "user=directus dbname=directus password=Y25GUFMNeaGpEd sslmode=disable")
+	connectionString := "user=directus dbname=directus password=Y25GUFMNeaGpEd sslmode=disable"
+	if (version == "development") {
+		connectionString += " host=cookie-go-htmx"
+	}
+	db, err := sqlx.Connect("postgres", connectionString)
 
 	if err != nil {
+		fmt.Println("failed to connect to db: ", err)
 		return Page{}, err
 	}
 	defer db.Close()
@@ -150,10 +181,11 @@ func getPageData(pageUrl string) (Page, error) {
 			Data: make(map[string]interface{}),
 		} 
 		query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", blockData.Collection)
-		err = db.QueryRowx(query, blockData.ID).MapScan(block.Data)
+		err = db.QueryRowx(query, blockData.Item).MapScan(block.Data)
 
 		if err != nil {
             fmt.Println("Error querying for blocks:", err)
+            fmt.Println("query:", query, blockData.ID)
             continue
         }
 
