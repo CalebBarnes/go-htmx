@@ -14,8 +14,8 @@ RUN go mod download
 # COPY *.go ./
 
 RUN apt-get update
-RUN apt-get install nodejs -y
-RUN go install github.com/cosmtrek/air@latest
+RUN apt-get install -y nodejs npm
+# RUN go install github.com/cosmtrek/air@latest
 
 # Build
 # RUN CGO_ENABLED=0 GOOS=linux npm run start
@@ -29,4 +29,4 @@ RUN go install github.com/cosmtrek/air@latest
 EXPOSE 42069
 
 # Run
-CMD ["npm run start"]
+CMD ["npm", "run", "start"]
