@@ -1,7 +1,6 @@
 package main
 
 import (
-	// "bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -37,6 +36,7 @@ func main() {
 			tmpl := template.Must(template.ParseFiles("templates/404.go.html"))
 			template.Must(tmpl.ParseGlob("components/*.go.html"))
 			data := map[string]interface{}{
+				"Version":  versionHash,
 				"Seo": Seo {
 					Title:"404 - Page not found",
 					Description: "You've hit a dead end...",
