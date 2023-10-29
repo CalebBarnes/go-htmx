@@ -126,6 +126,8 @@ func getPageData(pageUrl string) (Page, error) {
 	connectionString := "user=directus dbname=directus password=Y25GUFMNeaGpEd sslmode=disable"
 	if (version == "development") {
 		connectionString += " host=cookie-go-htmx"
+	} else {
+		connectionString += " host=database"
 	}
 	db, err := sqlx.Connect("postgres", connectionString)
 
