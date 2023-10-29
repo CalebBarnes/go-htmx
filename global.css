@@ -29,10 +29,10 @@ h6 {
 p {
   @apply text-base;
 }
-
+/* 
 a {
   @apply text-blue-500;
-}
+} */
 
 a:hover {
   @apply text-blue-700;
