@@ -7,6 +7,7 @@
     "dev": "air & npm run browser-sync & npm run watch",
     "watch": "tailwindcss build -i global.css -o static/css/tailwind.css --watch --minify",
     "build": "go build -o .dist/main.go -ldflags \"-X 'main.version=$(git rev-parse HEAD)'\" && tailwindcss build -i global.css -o static/css/tailwind.css",
+    "prestart":"git config --global --add safe.directory /app",
     "start": "npm run build && ./.dist/main.go",
     "browser-sync": "browser-sync start --proxy localhost:42069 --files 'static/css/*.css, templates/*.html, *.go' --no-notify"
   },
