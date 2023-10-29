@@ -26,18 +26,6 @@ func main() {
 	versionHash := version
 		
 	requestHandler := func(w http.ResponseWriter, r *http.Request) {
-
-		fmt.Println(r.URL.Path)
-		if (r.URL.Path == "/robots.txt"){
-			http.ServeFile(w, r, "./static/robots.txt")
-		}
-		if (r.URL.Path == "/favicon.ico"){
-			http.ServeFile(w, r, "./static/favicon.ico")
-		}
-		if (r.URL.Path == "/sitemap.xml"){
-			http.ServeFile(w, r, "./static/sitemap.xml")
-		}
-
 		if (version == "development") {
 			versionHash = strconv.FormatInt(time.Now().UnixNano(), 10)
 		}
