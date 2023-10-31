@@ -3,11 +3,11 @@ module.exports = {
   content: ["./templates/**/*.html", "./components/**/*.html"],
   theme: {
     extend: {
-      // fontFamily: {
-      //   primary: ["var(--font-inter)", ...fontFamily.sans],
-      //   serif: ["var(--font-inter)", ...fontFamily.serif],
-      //   mono: ["var(--font-mono)"],
-      // },
+      fontFamily: {
+        primary: ["Inter", "sans-serif"],
+        serif: ["var(--font-inter)"],
+        mono: ["var(--font-mono)"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

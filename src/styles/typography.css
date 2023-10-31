@@ -1,3 +1,7 @@
+html {
+  @apply font-primary antialiased;
+}
+
 h1 {
   @apply text-4xl;
 }
@@ -20,6 +24,15 @@ h5 {
 
 h6 {
   @apply text-base;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-extrabold;
 }
 
 p {

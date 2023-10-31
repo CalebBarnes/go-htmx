@@ -6,9 +6,15 @@
     <div>
       {{ template "navbar" . }}
 
-      <main>
-        {{ template "blocks" . }}
-      </main>
+      <!-- <div class="prose break-all">
+        <pre>
+          <code>
+            {{.}}
+          </code>
+        </pre>
+      </div> -->
+
+      <main>{{ template "blocks" . }}</main>
     </div>
 
     {{ template "footer" . }}

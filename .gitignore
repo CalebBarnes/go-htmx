@@ -4,3 +4,4 @@ tmp/build-errors.log
 tmp/main
 static/css/tailwind.css
 main
+.tmp/bundle.css
