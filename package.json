@@ -9,18 +9,29 @@
     "build": "go build -o .dist/main.go -ldflags \"-X 'main.version=$(git rev-parse HEAD)'\" && tailwindcss build -i global.css -o static/css/tailwind.css",
     "prestart": "git config --global --add safe.directory /app",
     "start": "npm run build && ./.dist/main.go",
-    "browser-sync": "browser-sync start --proxy localhost:42069 --files 'static/css/*.css, templates/*.html, *.go' --no-notify"
+    "browser-sync": "browser-sync start --proxy localhost:42069 --files 'static/css/*.css, templates/*.html, *.go' --no-notify",
+    "watch:css-bundle": "chokidar src/**/*.css src/**/**/*.css -c 'mkdir -p .tmp && touch .tmp/bundle.css && cat src/styles/tailwind/global.css ./src/styles/*.css > ./.tmp/bundle.css'",
+    "watch:css-postcss": "postcss -o static/css/main.css .tmp/bundle.css --watch",
+    "watch:css": "concurrently \"npm run watch:css-bundle\" \"npm run watch:css-postcss\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@tailwindcss/nesting": "^0.0.0-insiders.565cd3e",
     "@tailwindcss/typography": "^0.5.10",
     "nodemon": "^3.0.1"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.6",
+    "autoprefixer": "^10.4.16",
     "browser-sync": "^2.29.3",
-    "tailwindcss": "^3.3.3"
+    "chokidar-cli": "^3.0.0",
+    "concurrently": "^8.2.2",
+    "cssnano": "^6.0.1",
+    "postcss": "^8.4.31",
+    "postcss-cli": "^10.1.0",
+    "postcss-sass": "^0.5.0",
+    "tailwindcss": "^3.3.5"
   }
 }

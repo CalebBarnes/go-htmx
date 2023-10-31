@@ -1,7 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 h1 {
   @apply text-4xl;
 }
@@ -29,14 +25,15 @@ h6 {
 p {
   @apply text-base;
 }
-/* 
-a {
-  @apply text-blue-500;
-} */
 
-a:hover {
-  @apply text-blue-700;
-}
+/* 
+  a {
+    @apply text-blue-500;
+  } */
+
+/* a:hover {
+    @apply text-blue-700;
+  } */
 
 blockquote {
   @apply border-l-4 border-gray-200 italic my-8 pl-8 py-4;

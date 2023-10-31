@@ -1,0 +1,10 @@
+.edges-sm {
+  @apply max-w-3xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+.edges,
+.edges-md {
+  @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+.edges-lg {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}

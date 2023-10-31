@@ -1,0 +1,12 @@
+.button {
+  @apply px-5 py-2;
+  &-default {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+  &-link {
+    @apply underline;
+    &:after {
+      content: " >";
+    }
+  }
+}

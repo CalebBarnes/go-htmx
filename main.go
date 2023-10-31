@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -184,12 +185,13 @@ func blocksTemplateBuilder(blocks []Block)(string){
 			{{ if eq .Collection "a" }}
 				`
 			for _, block := range blocks {
-				// todo: check if template file exists
-				
-				blockBuilderStr+=`
+				// Check if template file exists
+				if fileExists("components/blocks/"+block.Collection+".go.html") {
+					blockBuilderStr+=`
 					{{ else if eq .Collection "`+block.Collection+`" }}
 						{{ template "`+block.Collection+`" .Data }}
-				`
+					`
+				}
 			}
 				blockBuilderStr+=`
 			{{ end }}
@@ -197,4 +199,12 @@ func blocksTemplateBuilder(blocks []Block)(string){
 	{{ end }}
 	`
 	return blockBuilderStr
+}
+
+func fileExists(filename string) bool {
+    info, err := os.Stat(filename)
+    if os.IsNotExist(err) {
+        return false
+    }
+    return !info.IsDir()
 }
