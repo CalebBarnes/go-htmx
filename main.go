@@ -184,6 +184,8 @@ func blocksTemplateBuilder(blocks []Block)(string){
 			{{ if eq .Collection "a" }}
 				`
 			for _, block := range blocks {
+				// todo: check if template file exists
+				
 				blockBuilderStr+=`
 					{{ else if eq .Collection "`+block.Collection+`" }}
 						{{ template "`+block.Collection+`" .Data }}
