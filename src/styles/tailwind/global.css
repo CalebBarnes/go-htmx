@@ -4,8 +4,8 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* --background: 0 0% 100%;
+  /* :root {
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
     --muted: 210 40% 96.1%;
@@ -34,8 +34,8 @@
 
     --ring: 215 20.2% 65.1%;
 
-    --radius: 0.5rem; */
-  }
+    --radius: 0.5rem;
+  } */
   .dark,
   :root {
     --background: 222.2 84% 4.9%;
