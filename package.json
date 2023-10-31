@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "air & npm run browser-sync & npm run watch",
+    "dev": "concurrently \"npm run watch:css\" \"npm run browser-sync\"",
     "watch": "tailwindcss build -i global.css -o static/css/tailwind.css --watch --minify",
     "build": "go build -o .dist/main.go -ldflags \"-X 'main.version=$(git rev-parse HEAD)'\" && tailwindcss build -i global.css -o static/css/tailwind.css",
     "prestart": "git config --global --add safe.directory /app",
