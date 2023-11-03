@@ -22,5 +22,18 @@
     rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Inter&display=swap"
   /> -->
+
+  <!-- deferred loading of google font css -->
+  <link
+    rel="preload"
+    href="https://fonts.googleapis.com/css2?family=Inter&display=swap"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript
+    ><link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter&display=swap"
+  /></noscript>
 </head>
 {{ end }}
