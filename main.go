@@ -25,7 +25,11 @@ var version string = "development"
 func main() {
 	fmt.Println("Starting server on http://localhost:42069")
 	versionHash := version
-		
+
+	mux := http.NewServeMux()
+
+	fileServer := http.FileServer(http.Dir("static"))
+	
 	requestHandler := func(w http.ResponseWriter, r *http.Request) {
 		if (version == "development") {
 			versionHash = strconv.FormatInt(time.Now().UnixNano(), 10)
@@ -83,13 +87,19 @@ func main() {
 		}
 	}
 
-	http.HandleFunc("/", requestHandler)
+	mux.Handle("/static/", maxAgeHandler(15552000, http.StripPrefix("/static/", fileServer)))
+	mux.HandleFunc("/", requestHandler)
 
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-
-	log.Fatal(http.ListenAndServe(":42069", nil))
+	log.Fatal(http.ListenAndServe(":42069", mux))
 }
 
+func maxAgeHandler(seconds int, h http.Handler) http.Handler {
+	fmt.Println("maxAgeHandler", seconds)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Cache-Control", fmt.Sprintf("public, max-age=%d", seconds))
+		h.ServeHTTP(w, r)
+	})
+}
 
 type Page struct {
     ID    int    `db:"id"`
