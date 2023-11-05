@@ -94,7 +94,7 @@ func main() {
 }
 
 func maxAgeHandler(seconds int, h http.Handler) http.Handler {
-	fmt.Println("maxAgeHandler", seconds)
+	// fmt.Println("maxAgeHandler", seconds)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Cache-Control", fmt.Sprintf("public, max-age=%d", seconds))
 		h.ServeHTTP(w, r)
@@ -104,6 +104,7 @@ func maxAgeHandler(seconds int, h http.Handler) http.Handler {
 type Page struct {
     ID    int    `db:"id"`
     Uri   sql.NullString `db:"uri"`
+	Status string `db:"status"`
     Title string `db:"title"`
 	Blocks []Block
 }
@@ -138,11 +139,12 @@ func getPageData(pageUrl string) (Page, error) {
 
 	var page Page
 	if pageUrl == "/" {
-		err = db.Get(&page, "SELECT id, uri, title FROM page WHERE uri = '' OR uri IS NULL")
+		err = db.Get(&page, "SELECT id, uri, title, status FROM page WHERE uri = '' OR uri IS NULL AND status = 'published'")
 	} else {
-		err = db.Get(&page, "SELECT id, uri, title FROM page WHERE uri = $1", pageUrl)
+		err = db.Get(&page, "SELECT id, uri, title, status FROM page WHERE uri = $1 AND status = 'published'", pageUrl)
 	}
 	if err != nil {
+		fmt.Println("failed to get page: ", err)
 		return Page{}, err
 	}
 
@@ -190,7 +192,7 @@ func getPageData(pageUrl string) (Page, error) {
 
 func blocksTemplateBuilder(blocks []Block)(string){
 	blockBuilderStr := `
-	{{ define "blocks" }}    
+	{{ define "blocks" }}
 		{{ range .Data.Blocks }}
 			{{ if eq .Collection "a" }}
 				`
