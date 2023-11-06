@@ -6,16 +6,32 @@
     "**/CVS": true,
     "**/.DS_Store": true,
     "**/Thumbs.db": true,
-    // "**/.gitignore": true,
+    "**/.gitignore": true,
     "**/node_modules": true,
     "**/tmp": true,
-    "**/.dist": true
+    "**/.tmp": true,
+    "**/.dist": true,
+    "**/bin": true
   },
   "search.exclude": {
     "**/node_modules": true,
     "**/bower_components": true,
     "**/tmp": true,
-    "**/.dist": true
+    "**/.dist": true,
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/.gitignore": true,
+    "**/.tmp": true,
+    "**/bin": true,
+    "**/static/css/main.css": true
   },
   "css.customData": [".vscode/tailwind.json"]
+
+  // "tailwindCSS.includeLanguages": {
+  //   "templ": "html"
+  // }
 }

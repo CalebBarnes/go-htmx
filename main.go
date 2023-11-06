@@ -23,7 +23,6 @@ type Seo struct {
 var version string = "development"
 
 func main() {
-	fmt.Println("Starting server on http://localhost:42069")
 	versionHash := version
 
 	mux := http.NewServeMux()
