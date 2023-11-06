@@ -13,16 +13,11 @@
 
 To build and serve the application in production mode:
 
-- `pnpm start`
+- `npm run start`
 
-To run the Go webserver in development mode:
+Run the project in dev mode:
+- `npm run dev`
 
-- `air`
-
-Tailwind CSS JIT compiler to watch for changes in the html templates and rebuild the CSS
-
-- `pnpm run watch`
-
-Browsersync to auto refresh the browser when files change
-
-- `pnpm run browser-sync`
+1. Starts the go web server using `air` for auto reload when the go code changes
+2. Watching and bundling all of the css files in `styles` folder into one minified css file (including tailwind classes)
+3. Starts `browser-sync` at localhost:3000 for hot reloading during dev
