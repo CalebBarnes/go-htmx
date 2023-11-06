@@ -38,8 +38,8 @@ func main() {
 		pageData, err := getPageData(r.URL.Path)
 		
 		if err != nil {
-			tmpl := template.Must(template.ParseFiles("templates/404.go.html"))
-			template.Must(tmpl.ParseGlob("components/*.go.html"))
+			tmpl := template.Must(template.ParseFiles("src/templates/404.go.html"))
+			template.Must(tmpl.ParseGlob("src/components/*.go.html"))
 			data := map[string]interface{}{
 				"Version":  versionHash,
 				"Seo": Seo {
@@ -47,6 +47,13 @@ func main() {
 					Description: "You've hit a dead end...",
 				},
 			}
+
+			if (version == "development") {
+				data["Env"] = "development"
+			} else {
+				data["Env"] = "production"
+			}
+
 			tmpl.Execute(w, data)
 			
 		} else {
@@ -59,7 +66,14 @@ func main() {
 					},
 					"Data": pageData,
 				}
-			tmpl, err := template.ParseFiles("templates/index.go.html")
+
+			if (version == "development") {
+				data["Env"] = "development"
+			} else {
+				data["Env"] = "production"
+			}
+
+			tmpl, err := template.ParseFiles("src/templates/index.go.html")
 			if err != nil {
 				log.Fatalf("Error parsing main template: %v", err)
 			}
@@ -69,11 +83,11 @@ func main() {
 					return template.HTML(str)
 				},
 			})
-			tmpl, err = tmpl.ParseGlob("components/*.go.html")
+			tmpl, err = tmpl.ParseGlob("src/components/*.go.html")
 			if err != nil {
 				log.Fatalf("Error parsing component templates: %v", err)
 			}
-			tmpl, err = tmpl.ParseGlob("components/blocks/*.go.html")
+			tmpl, err = tmpl.ParseGlob("src/components/blocks/*.go.html")
 			if err != nil {
 				log.Fatalf("Error parsing block templates: %v", err)
 			}
@@ -198,7 +212,7 @@ func blocksTemplateBuilder(blocks []Block)(string){
 				`
 			for _, block := range blocks {
 				// Check if template file exists
-				if fileExists("components/blocks/"+block.Collection+".go.html") {
+				if fileExists("src/components/blocks/"+block.Collection+".go.html") {
 					blockBuilderStr+=`
 					{{ else if eq .Collection "`+block.Collection+`" }}
 						{{ template "`+block.Collection+`" .Data }}
