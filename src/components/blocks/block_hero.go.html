@@ -54,7 +54,10 @@
 
         <div class="mt-10 flex items-center justify-center gap-x-6">
           {{ range .buttons }}
-          <a href="{{ .href }}" class="button button-{{ .variant }}"
+          <a
+            preload="mouseover"
+            href="{{ .href }}"
+            class="button button-{{ .variant }}"
             >{{ .label }}</a
           >
           {{ end }}
