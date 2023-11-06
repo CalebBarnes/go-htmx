@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="h-full">
   {{ template "head" . }}
 
-  <body class="min-h-screen flex flex-col justify-between">
+  <body hx-ext="preload" class="flex min-h-screen flex-col justify-between">
     <div>
       {{ template "navbar" . }}
 

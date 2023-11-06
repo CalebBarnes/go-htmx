@@ -94,11 +94,17 @@ func main() {
 			if err != nil {
 				log.Fatalf("Error parsing block templates: %v", err)
 			}
+
+			w.Header().Add("Cache-Control", fmt.Sprintf("private, max-age=%d", 60))
+
 			if err := tmpl.Execute(w, data); err != nil {
 				log.Println("Error executing template:", err)
 			}
 		}
 	}
+
+
+	
 
 	mux.Handle("/static/", maxAgeHandler(15552000, http.StripPrefix("/static/", fileServer)))
 	mux.HandleFunc("/", requestHandler)
