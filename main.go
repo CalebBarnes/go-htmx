@@ -103,9 +103,6 @@ func main() {
 		}
 	}
 
-
-	
-
 	mux.Handle("/static/", maxAgeHandler(15552000, http.StripPrefix("/static/", fileServer)))
 	mux.HandleFunc("/", requestHandler)
 
