@@ -323,7 +323,7 @@ func getImageProps(id string, options ...string) template.HTMLAttr {
         widths := generateWidths(maxWidth)
         srcsetValues := make([]string, len(widths))
         for i, width := range widths {
-            optimizedImageUrl := fmt.Sprintf("/.generated/images?url=%s&width=%d", url.QueryEscape(imageUrl), width)
+            optimizedImageUrl := fmt.Sprintf("/.generated/images/image.png?url=%s&width=%d", url.QueryEscape(imageUrl), width)
             srcsetValues[i] = fmt.Sprintf("%s %dw", optimizedImageUrl, width)
         }
         attrs["srcset"] = strings.Join(srcsetValues, ", ")
@@ -334,7 +334,7 @@ func getImageProps(id string, options ...string) template.HTMLAttr {
         attrs["sizes"] = "(max-width: 600px) 100vw, (max-width: 1024px) 50vw, 25vw"
     }
 
-    attrs["src"] = fmt.Sprintf("/.generated/images?url=%s&width=%d", url.QueryEscape(imageUrl), maxWidth)
+    attrs["src"] = fmt.Sprintf("/.generated/images/image.png?url=%s&width=%d", url.QueryEscape(imageUrl), maxWidth)
     
     if lazyLoading {
         attrs["loading"] = "lazy"

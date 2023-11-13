@@ -45,11 +45,9 @@
       <div>
         {{ if .image }}
 
+      
         <div>
-          <img {{ getImageProps .image "sizes=400px"}} />
-        </div>
-        <div>
-          <img {{getImageProps .image "sizes=(max-width: 768px) 100vw, 56rem"}} />
+          <img {{getImageProps .image "sizes=(max-width: 768px) 100vw, 56rem" "lazy=true"}} />
         </div>
 
         {{ end}}
