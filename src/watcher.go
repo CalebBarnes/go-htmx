@@ -1,62 +1,57 @@
-package dev
+package main
 
 import (
-    "log"
-	"os"
-	"os/exec"
-    "github.com/fsnotify/fsnotify"
-	"path/filepath"
-	"io/ioutil"
 	"bytes"
 	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/fsnotify/fsnotify"
 )
 
-func main() {
-    banner()
-    color.Green("Starting file watcher...")
-    bundleCss() // bundle on startup
+func watcher() {
+	// Create new watcher.
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+	// Define top-level directories to watch relative to current working directory (includes subdirectories recursively)
+	directories := []string{"src/components", "src/styles"}
 
-    // Create new watcher.
-    watcher, err := fsnotify.NewWatcher()
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer watcher.Close()
+	// Add directories to watcher and walk through them
+	for _, dir := range directories {
+		addDirToWatcher(watcher, dir)
+	}
 
-    // Define top-level directories to watch relative to current working directory (includes subdirectories recursively)
-    directories := []string{"src/components", "src/styles"}
+	// Start listening for events.
+	go watchForChanges(watcher)
 
-    // Add directories to watcher and walk through them
-    for _, dir := range directories {
-        addDirToWatcher(watcher, dir)
-    }
+	// Block main goroutine forever.
+	<-make(chan struct{})
 
-    // Start listening for events.
-    go watchForChanges(watcher)
-
-    // Block main goroutine forever.
-    <-make(chan struct{})
 }
 
 // watchForChanges handles file system events
 func watchForChanges(watcher *fsnotify.Watcher) {
-    for {
-        select {
-        case event, ok := <-watcher.Events:
-            if !ok {
-                return
-            }
-            handleEvent(event, watcher)
-        case err, ok := <-watcher.Errors:
-            if !ok {
-                return
-            }
-            log.Println("error:", err)
-        }
-    }
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+			handleEvent(event, watcher)
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			log.Println("error:", err)
+		}
+	}
 }
 
 func handleEvent(event fsnotify.Event, watcher *fsnotify.Watcher) {
@@ -76,7 +71,7 @@ func handleEvent(event fsnotify.Event, watcher *fsnotify.Watcher) {
 		// check if file is a css file
 		if !mode.IsDir() && filepath.Ext(event.Name) == ".css" {
 			color.Green("CSS file created, bundling...")
-			bundleCss()
+			go bundleCss()
 		}
 	}
 
@@ -87,9 +82,10 @@ func handleEvent(event fsnotify.Event, watcher *fsnotify.Watcher) {
 			log.Fatal(err)
 		}
 		mode := fi.Mode()
-		if !mode.IsDir() && filepath.Ext(event.Name) == ".css" {
-			color.Green("CSS file changed, bundling...")
-			bundleCss()
+		if !mode.IsDir() && filepath.Ext(event.Name) == ".html" {
+			go bundleCss()
+		} else if !mode.IsDir() && filepath.Ext(event.Name) == ".css" {
+			go bundleCss()
 		} else {
 			color.Green("file changed: " + event.Name)
 		}
@@ -97,31 +93,32 @@ func handleEvent(event fsnotify.Event, watcher *fsnotify.Watcher) {
 
 	// if RENAME, log what it was renamed to
 	if event.Op == fsnotify.Rename {
-		color.Red("removed directory: " + event.Name)
+		color.Red("removed: " + event.Name)
 	}
 
 }
 
 func addDirToWatcher(watcher *fsnotify.Watcher, dir string) {
-    err := watcher.Add(dir)
-    if err != nil {
-        log.Fatal(err)
-    }
-    color.Blue(dir)
-    filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-        if info.IsDir() {
+	err := watcher.Add(dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	color.Blue(dir)
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
 			// skip if same as top-level dir
 			if path == dir {
 				return nil
 			}
 			color.Blue("|-- " + path[len(dir)+1:])
-            watcher.Add(path)
-        }
-        return nil
-    })
+			watcher.Add(path)
+		}
+		return nil
+	})
 }
 
 func bundleCss() {
+	color.Green("Bundling CSS...")
 	// open file for writing
 	f, err := os.Create("./tmp/bundle.css")
 	if err != nil {
@@ -144,6 +141,11 @@ func bundleCss() {
 
 	// write all other css files to bundle.css
 	filepath.Walk("src/styles", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			color.Red("Error walking src/styles directory")
+			log.Fatal(err)
+		}
+
 		// skip directories
 		if info.IsDir() {
 			return nil
@@ -183,12 +185,13 @@ func bundleCss() {
 	fmt.Println(duration)
 }
 
-
-func banner() {
-	c := color.New(color.FgCyan)
-    b, err := ioutil.ReadFile("banner.txt")
-    if err != nil {
-        panic(err)
-    }
-    c.Println(string(b))
+func startBrowserSync() {
+	cmd := exec.Command("./node_modules/.bin/browser-sync", "start", "--proxy", "localhost:"+os.Getenv("PORT"), "--files", "'static/css/*.css, src/templates/*.html, src/components/**/*.html, *.go'", "--no-notify", "--plugins", "bs-html-injector?files[]=*.html", "--no-open")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmdErr := cmd.Run()
+	if cmdErr != nil {
+		color.Red(fmt.Sprint(cmdErr) + ": " + stderr.String())
+		return
+	}
 }

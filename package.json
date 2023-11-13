@@ -4,17 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "npx figlet-cli CookieCloud && concurrently \"$(go env GOPATH)/bin/air\" \"npm run watch:css\" \"npm run browser-sync\"",
-    "watch": "tailwindcss build -i global.css -o static/css/tailwind.css --watch --minify",
-    "build": "go build -o .dist/main.go -ldflags \"-X 'main.version=$(git rev-parse HEAD)'\" && npm run build:css",
-    "prestart": "git config --global --add safe.directory /app",
-    "start": "npm run build && ./.dist/main.go",
-    "browser-sync": "browser-sync start --proxy localhost:42069 --files 'static/css/*.css, src/templates/*.html, src/components/**/*.html, *.go' --no-notify --plugins 'bs-html-injector?files[]=*.html'",
-    "watch:css-bundle": "chokidar src/**/*.css -c 'mkdir -p tmp && touch tmp/bundle.css && cat src/styles/global.css ./src/styles/*.css > ./tmp/bundle.css'",
-    "watch:css-postcss": "postcss -o .generated/css/main.css tmp/bundle.css --watch",
-    "watch:css": "concurrently \"npm run watch:css-bundle\" \"npm run watch:css-postcss\"",
-    "build:css-bundle": "mkdir -p tmp && touch tmp/bundle.css && cat src/styles/global.css ./src/styles/*.css > ./tmp/bundle.css",
-    "build:css": "npm run build:css-bundle && postcss -o .generated/css/main.css tmp/bundle.css"
+    "dev": "$(go env GOPATH)/bin/air",
+    "build": "go build -o main -ldflags \"-X 'main.version=$(git rev-parse HEAD)'\" ./src",
+    "start": "npm run build && ./main",
+    "prestart": "git config --global --add safe.directory /app"
   },
   "keywords": [],
   "author": "",

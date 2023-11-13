@@ -2,28 +2,33 @@ root = "."
 testdata_dir = "testdata"
 tmp_dir = "tmp"
 
+[watcher]
+cmd = ["echo 'test"]
+exts = ["go", "tpl", "tmpl", "html"]
+
+
+
 [build]
   args_bin = []
-  bin = "./tmp/main"
-  cmd = "go build -o ./tmp/main ."
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", ".dist", ".git", "node_modules"]
   exclude_file = []
   exclude_regex = ["_test.go"]
   exclude_unchanged = false
   follow_symlink = false
-  full_bin = ""
-  include_dir = []
+  cmd = "go build -o ./tmp/main ./src/*.go"
+  full_bin = "APP_VER=development ./tmp/main"
+  include_dir = ["src"]
   include_ext = ["go", "tpl", "tmpl", 
   # "html"
   ]
   include_file = []
   kill_delay = "0s"
-  log = "build-errors.log"
+  log = "air.log"
   poll = false
   poll_interval = 0
-  post_cmd = []
   pre_cmd = []
+  post_cmd = ["kill -9 $(lsof -t -i:42069 -sTCP:LISTEN)"]
   rerun = false
   rerun_delay = 500
   send_interrupt = false

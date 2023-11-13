@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="en" class="h-full">
-  {{ template "head" . }}
+{{ template "head" . }}
 
-  <body hx-ext="preload" class="flex min-h-screen flex-col justify-between">
-    {{ template "main_stuff" . }}
-  </body>
+<body hx-ext="preload" class="flex min-h-screen flex-col justify-between">
+  {{ template "main_stuff" . }}
+</body>
+
 </html>
 
 {{ define "main_stuff" }}
