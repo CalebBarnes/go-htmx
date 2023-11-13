@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -36,13 +37,32 @@ type Block struct {
 	Data       map[string]interface{}
 }
 
+type CacheEntry struct {
+	Page      Page
+	Timestamp time.Time
+}
+
+var (
+	pageCache = make(map[string]CacheEntry)
+	cacheTTL  = 30 * time.Minute // TTL of 30 minutes
+)
+
 func getPageData(pageUrl string) (Page, error) {
-	connectionString := "user=directus dbname=directus password=Y25GUFMNeaGpEd sslmode=disable"
-	if os.Getenv("APP_VER") == "development" {
-		connectionString += " host=cookie-go-htmx"
-	} else {
-		connectionString += " host=database"
+	// Check if the page data is available in the cache
+	if entry, found := pageCache[pageUrl]; found {
+		// Check if the entry is still valid
+		if time.Since(entry.Timestamp) < cacheTTL {
+			// color.Green("Cache hit for %s", pageUrl)
+			return entry.Page, nil
+		}
+		// Invalidate the stale entry
+		delete(pageCache, pageUrl)
 	}
+	// color.Red("Cache miss for %s", pageUrl)
+
+	connectionString := "user=directus dbname=directus password=Y25GUFMNeaGpEd sslmode=disable"
+	connectionString += " host=" + os.Getenv("DB_HOST")
+
 	db, err := sqlx.Connect("postgres", connectionString)
 
 	if err != nil {
@@ -58,7 +78,6 @@ func getPageData(pageUrl string) (Page, error) {
 		err = db.Get(&page, "SELECT id, uri, title, status FROM page WHERE uri = $1 AND status = 'published'", pageUrl)
 	}
 	if err != nil {
-		fmt.Println("failed to get page: ", err)
 		return Page{}, err
 	}
 
@@ -105,7 +124,18 @@ func getPageData(pageUrl string) (Page, error) {
 	}
 
 	page.Blocks = blocks
+
+	pageCache[pageUrl] = CacheEntry{Page: page, Timestamp: time.Now()}
+
 	return page, nil
+}
+
+func invalidateCache(pageUrl string) {
+	delete(pageCache, pageUrl)
+}
+
+func invalidateAllCache() {
+	pageCache = make(map[string]CacheEntry)
 }
 
 func blocksTemplateBuilder(blocks []Block) string {

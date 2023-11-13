@@ -44,6 +44,14 @@ func server() {
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), mux))
 }
 
+var funcMap = template.FuncMap{
+	// Render HTML in a template without escaping it (or any other strings)
+	"noescape": func(str string) template.HTML {
+		return template.HTML(str)
+	},
+	"getImageProps": getImageProps,
+}
+
 func pageTemplate(pageData Page, w http.ResponseWriter, r *http.Request, versionHash string) {
 	data := map[string]interface {
 	}{
@@ -65,13 +73,7 @@ func pageTemplate(pageData Page, w http.ResponseWriter, r *http.Request, version
 	if err != nil {
 		log.Fatalf("Error parsing main template: %v", err)
 	}
-	tmpl.Funcs(template.FuncMap{
-		// Render HTML in a template without escaping it (or any other strings)
-		"noescape": func(str string) template.HTML {
-			return template.HTML(str)
-		},
-		"getImageProps": getImageProps,
-	})
+	tmpl.Funcs(funcMap)
 	tmpl, err = tmpl.ParseGlob("src/components/*.go.html")
 	if err != nil {
 		log.Fatalf("Error parsing component templates: %v", err)
@@ -86,8 +88,10 @@ func pageTemplate(pageData Page, w http.ResponseWriter, r *http.Request, version
 	}
 
 	if version == "production" {
-		w.Header().Add("Cache-Control", fmt.Sprintf("private, max-age=%d", 60))
+		w.Header().Add("Cache-Control", fmt.Sprintf("private, max-age=%d stale-while-revalidate=%d", 60, 86400))
 	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
 	if err := tmpl.Execute(w, data); err != nil {
 		log.Println("Error executing template:", err)
 	}
@@ -104,13 +108,14 @@ func notFound(w http.ResponseWriter, r *http.Request, versionHash string) {
 		},
 	}
 
-	if version == "development" {
-		data["Env"] = "development"
-	} else {
-		data["Env"] = "production"
+	// Set the Content-Type header
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	// Set the HTTP status code to 404
+	w.WriteHeader(http.StatusNotFound)
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Error executing 404 template: %v", err)
+		return
 	}
-
-	tmpl.Execute(w, data)
 }
 
 func maxAgeHandler(seconds int, h http.Handler) http.Handler {
@@ -125,7 +130,7 @@ var version string
 func getVersionHash() string {
 	var versionHash string
 
-	if os.Getenv("APP_VER") == "development" {
+	if os.Getenv("APP_ENV") == "development" {
 		versionHash = strconv.FormatInt(time.Now().UnixNano(), 10)
 	} else if version != "" {
 		versionHash = version
