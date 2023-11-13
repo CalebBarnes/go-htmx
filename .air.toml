@@ -17,7 +17,7 @@ exts = ["go", "tpl", "tmpl", "html"]
   exclude_unchanged = false
   follow_symlink = false
   cmd = "go build -o ./tmp/main ./src/*.go"
-  full_bin = "APP_VER=development ./tmp/main"
+  full_bin = "APP_ENV=development ./tmp/main"
   include_dir = ["src"]
   include_ext = ["go", "tpl", "tmpl", 
   # "html"

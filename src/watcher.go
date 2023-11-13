@@ -181,8 +181,8 @@ func bundleCss() {
 	}
 
 	duration := time.Since(start)
-	// color.Green("Bundled CSS in " + duration.String())
-	fmt.Println(duration)
+
+	color.Green("Bundled CSS in " + duration.String())
 }
 
 func startBrowserSync() {
