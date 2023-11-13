@@ -5,13 +5,14 @@
     "**/.hg": true,
     "**/CVS": true,
     "**/.DS_Store": true,
-    "**/Thumbs.db": true
+    "**/Thumbs.db": true,
     // "**/.gitignore": true,
-    // "**/node_modules": true,
-    // "**/tmp": true,
+    "**/node_modules": true,
+    "**/tmp": true,
     // "**/.tmp": true,
     // "**/.dist": true,
-    // "**/bin": true
+    "**/bin": true,
+    "main": true
   },
   "search.exclude": {
     ".generated": true,
