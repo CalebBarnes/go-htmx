@@ -10,8 +10,8 @@
     "prestart": "git config --global --add safe.directory /app",
     "start": "npm run build && ./.dist/main.go",
     "browser-sync": "browser-sync start --proxy localhost:42069 --files 'static/css/*.css, src/templates/*.html, src/components/**/*.html, *.go' --no-notify --plugins 'bs-html-injector?files[]=*.html'",
-    "watch:css-bundle": "chokidar src/**/*.css src/**/**/*.css -c 'mkdir -p .tmp && touch .tmp/bundle.css && cat src/styles/tailwind/global.css ./src/styles/*.css > ./.tmp/bundle.css'",
-    "watch:css-postcss": "postcss -o static/css/main.css .tmp/bundle.css --watch",
+    "watch:css-bundle": "chokidar src/**/*.css -c 'mkdir -p tmp && touch tmp/bundle.css && cat src/styles/tailwind/global.css ./src/styles/*.css > ./tmp/bundle.css'",
+    "watch:css-postcss": "postcss -o .generated/css/main.css tmp/bundle.css --watch",
     "watch:css": "concurrently \"npm run watch:css-bundle\" \"npm run watch:css-postcss\"",
     "build:css-bundle": "mkdir -p .tmp && touch .tmp/bundle.css && cat src/styles/tailwind/global.css ./src/styles/*.css > ./.tmp/bundle.css",
     "build:css": "npm run build:css-bundle && postcss -o static/css/main.css .tmp/bundle.css"

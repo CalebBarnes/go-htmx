@@ -5,3 +5,5 @@ tmp/main
 static/css/tailwind.css
 main
 .tmp/bundle.css
+tmp
+bin
