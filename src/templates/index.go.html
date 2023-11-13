@@ -3,12 +3,16 @@
   {{ template "head" . }}
 
   <body hx-ext="preload" class="flex min-h-screen flex-col justify-between">
-    <div>
-      {{ template "navbar" . }}
-
-      <main>{{ template "blocks" . }}</main>
-    </div>
-
-    {{ template "footer" . }}
+    {{ template "main_stuff" . }}
   </body>
 </html>
+
+{{ define "main_stuff" }}
+
+<div>
+  {{ template "navbar" . }}
+
+  <main>{{ template "blocks" . }}</main>
+</div>
+
+{{ template "footer" . }} {{ end }}

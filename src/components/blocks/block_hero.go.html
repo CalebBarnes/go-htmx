@@ -1,5 +1,5 @@
 {{ define "block_hero" }}
-<div class="relative z-0 max-h-screen overflow-hidden">
+<div class="relative z-0 min-h-screen overflow-hidden">
   <div class="relative isolate px-6 pt-14 lg:px-8">
     <div
       class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
@@ -41,6 +41,17 @@
           >
         </div>
       </div>
+
+      <div>
+        {{ if .image }}
+
+        <div>
+          <img {{ getImageProps .image "height=200" "layout=fullwidth" }} />
+        </div>
+
+        {{ end}}
+      </div>
+
       <div class="text-center">
         <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
           {{.headline}}

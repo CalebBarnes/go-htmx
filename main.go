@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	// "net/url"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -20,6 +22,8 @@ type Seo struct {
 	Description string
 }
 
+
+
 var version string = "development"
 
 func main() {
@@ -28,6 +32,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	fileServer := http.FileServer(http.Dir("static"))
+	genFileServer := http.FileServer(http.Dir(".generated"))
 	
 	requestHandler := func(w http.ResponseWriter, r *http.Request) {
 		if (version == "development") {
@@ -81,6 +86,7 @@ func main() {
 				"noescape": func(str string) template.HTML {
 					return template.HTML(str)
 				},
+				"getImageProps": getImageProps,
 			})
 			tmpl, err = tmpl.ParseGlob("src/components/*.go.html")
 			if err != nil {
@@ -95,14 +101,16 @@ func main() {
 				log.Fatalf("Error parsing block templates: %v", err)
 			}
 
+			if (version == "production") {
 			w.Header().Add("Cache-Control", fmt.Sprintf("private, max-age=%d", 60))
-
+			}
 			if err := tmpl.Execute(w, data); err != nil {
 				log.Println("Error executing template:", err)
 			}
 		}
 	}
 
+	mux.Handle("/.generated/", maxAgeHandler(15552000, http.StripPrefix("/.generated/", genFileServer)))
 	mux.Handle("/static/", maxAgeHandler(15552000, http.StripPrefix("/static/", fileServer)))
 	mux.HandleFunc("/", requestHandler)
 
@@ -187,17 +195,34 @@ func getPageData(pageUrl string) (Page, error) {
         }
 
 		// dynamically unmarshalling bytecode when a blocks field contains it (serialized json data usually)
-        for key, value := range block.Data {
-            if byteValue, ok := value.([]byte); ok {
-                var deserializedData interface{}
-                if err := json.Unmarshal(byteValue, &deserializedData); err == nil {
-                    block.Data[key] = deserializedData
-                }
-				// else {
-                //     fmt.Println("Failed to unmarshal:", err)
-                // }
-            }
-        }
+        // for key, value := range block.Data {
+        //     if byteValue, ok := value.([]byte); ok {
+        //         var deserializedData interface{}
+        //         if err := json.Unmarshal(byteValue, &deserializedData); err == nil {
+        //             block.Data[key] = deserializedData
+        //         }
+		// 		// else {
+        //         //     fmt.Println("Failed to unmarshal:", err)
+        //         // }
+        //     }
+        // }
+
+		for key, value := range block.Data {
+			switch v := value.(type) {
+			case []byte:
+				// Try to unmarshal as JSON
+				var jsonData interface{}
+				if err := json.Unmarshal(v, &jsonData); err == nil {
+					block.Data[key] = jsonData
+				} else {
+					// If not JSON, convert to string
+					block.Data[key] = string(v)
+				}
+			default:
+				// Handle other types as needed
+			}
+		}
+		
         // Append to the overall list of blocks.
         blocks = append(blocks, block)
 	}
@@ -236,3 +261,59 @@ func fileExists(filename string) bool {
     }
     return !info.IsDir()
 }
+
+func getImageProps(id string, options ...string) template.HTMLAttr {
+    validAttrs := map[string]bool{
+        "src": true, "width": true, "height": true, "class": true,
+        "alt": true, "title": true, // add other valid attributes here
+    }
+    attrs := make(map[string]string)
+    attrs["src"] = "https://go-htmx-directus.cookieserver.gg/assets/" + id
+    var order []string
+    order = append(order, "src")
+
+    var layoutOption string // Variable to store the value of "layout" option
+
+    for _, option := range options {
+        parts := strings.Split(option, "=")
+        if len(parts) == 2 {
+            key := parts[0]
+            if validAttrs[key] {
+                if _, exists := attrs[key]; !exists {
+                    order = append(order, key) // Record the order of valid keys
+                }
+                attrs[key] = parts[1]
+            } else {
+                // Process non-valid attributes here
+                if key == "layout" {
+                    layoutOption = parts[1] // Store the "layout" option for later use
+                    // Additional processing for "layout" can be done here
+                }
+            }
+        }
+    }
+
+    // Handle class attribute
+    if classValue, exists := attrs["class"]; exists {
+        attrs["class"] = classValue + " image-wrapper"
+        if attrs["class"][0] == ' ' {
+            attrs["class"] = attrs["class"][1:]
+        }
+    } else {
+        attrs["class"] = "image-wrapper"
+        order = append(order, "class")
+    }
+
+    var b strings.Builder
+    for _, key := range order {
+        b.WriteString(fmt.Sprintf(`%s="%s" `, key, attrs[key]))
+    }
+
+    // Additional logic using layoutOption here, if needed
+	println(id)
+	println(layoutOption)
+
+    return template.HTMLAttr(b.String())
+}
+
+
