@@ -169,9 +169,6 @@ func convertURLToFilePath(url string) string {
 }
 
 func imageHandler(w http.ResponseWriter, r *http.Request) {
-	// Extract the necessary parameters from the URL
-	// For example, the image ID and the requested width
-	// This depends on how your URLs are structured
 	url := r.URL.Query().Get("url")
 	widthStr := r.URL.Query().Get("width")
 	width, err := strconv.Atoi(widthStr)
