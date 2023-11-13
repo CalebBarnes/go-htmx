@@ -7,3 +7,4 @@ main
 .tmp/bundle.css
 tmp
 bin
+.generated
