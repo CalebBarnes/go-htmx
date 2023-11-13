@@ -19,7 +19,7 @@ import (
 func getImageProps(id string, options ...string) template.HTMLAttr {
 	attrs := make(map[string]string)
 	order := []string{"src"} // Start with src as the first key
-	imageUrl := "https://go-htmx-directus.cookieserver.gg/assets/" + id
+	imageUrl := os.Getenv("DIRECTUS_URL") + "/assets/" + id
 	maxWidth := 1920 // Default maxWidth
 	customSrcsetProvided := false
 	customSizesProvided := false
