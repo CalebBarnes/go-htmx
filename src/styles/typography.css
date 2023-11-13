@@ -49,17 +49,17 @@ p {
   } */
 
 blockquote {
-  @apply border-l-4 border-gray-200 italic my-8 pl-8 py-4;
+  @apply my-8 border-l-4 border-gray-200 py-4 pl-8 italic;
 }
 
 code {
-  @apply bg-gray-200 font-mono px-2 py-1 rounded;
+  @apply rounded bg-gray-200 px-2 py-1 font-mono;
 }
 
 pre {
-  @apply bg-gray-200 font-mono overflow-auto p-4 rounded;
+  @apply overflow-auto rounded bg-gray-200 p-4 font-mono;
 }
 
 pre code {
-  @apply bg-transparent font-normal p-0;
+  @apply bg-transparent p-0 font-normal;
 }
