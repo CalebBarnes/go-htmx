@@ -130,33 +130,11 @@ func getPageData(pageUrl string) (Page, error) {
 	return page, nil
 }
 
-func invalidateCache(pageUrl string) {
-	delete(pageCache, pageUrl)
-}
+// todo: implement cache invalidation when a page is updated
+// func invalidateCache(pageUrl string) {
+// 	delete(pageCache, pageUrl)
+// }
 
-func invalidateAllCache() {
-	pageCache = make(map[string]CacheEntry)
-}
-
-func blocksTemplateBuilder(blocks []Block) string {
-	blockBuilderStr := `
-	{{ define "blocks" }}
-		{{ range .Data.Blocks }}
-			{{ if eq .Collection "a" }}
-				`
-	for _, block := range blocks {
-		// Check if template file exists
-		if fileExists("src/components/blocks/" + block.Collection + ".go.html") {
-			blockBuilderStr += `
-					{{ else if eq .Collection "` + block.Collection + `" }}
-						{{ template "` + block.Collection + `" .Data }}
-					`
-		}
-	}
-	blockBuilderStr += `
-			{{ end }}
-		{{ end }} 
-	{{ end }}
-	`
-	return blockBuilderStr
-}
+// func invalidateAllCache() {
+// 	pageCache = make(map[string]CacheEntry)
+// }

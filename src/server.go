@@ -118,6 +118,29 @@ func notFound(w http.ResponseWriter, r *http.Request, versionHash string) {
 	}
 }
 
+func blocksTemplateBuilder(blocks []Block) string {
+	blockBuilderStr := `
+	{{ define "blocks" }}
+		{{ range .Data.Blocks }}
+			{{ if eq .Collection "a" }}
+				`
+	for _, block := range blocks {
+		// Check if template file exists
+		if fileExists("src/components/blocks/" + block.Collection + ".go.html") {
+			blockBuilderStr += `
+					{{ else if eq .Collection "` + block.Collection + `" }}
+						{{ template "` + block.Collection + `" .Data }}
+					`
+		}
+	}
+	blockBuilderStr += `
+			{{ end }}
+		{{ end }} 
+	{{ end }}
+	`
+	return blockBuilderStr
+}
+
 func maxAgeHandler(seconds int, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Cache-Control", fmt.Sprintf("public, max-age=%d", seconds))
