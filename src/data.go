@@ -41,13 +41,15 @@ type Block struct {
 var cacheMutex sync.RWMutex
 
 type CacheEntry struct {
-	Page      Page
-	Timestamp time.Time
+	Page       Page
+	Timestamp  time.Time
+	Stale      bool
+	Refreshing bool // New field to indicate a refresh is in progress
 }
 
 var (
 	pageCache = make(map[string]CacheEntry)
-	cacheTTL  = 1 * time.Minute // TTL of 30 minutes
+	cacheTTL  = 10 * time.Second
 )
 
 func getPageData(pageUrl string) (Page, error) {
@@ -56,26 +58,64 @@ func getPageData(pageUrl string) (Page, error) {
 	cacheMutex.RUnlock()
 
 	if found {
-		// Check if the entry is still valid
 		if time.Since(entry.Timestamp) < cacheTTL {
+			// color.Green("Cache hit for %s", pageUrl)
 			return entry.Page, nil
+		} else {
+			if !entry.Stale || (entry.Stale && !entry.Refreshing) {
+				// color.Yellow("Cache stale for %s", pageUrl)
+				cacheMutex.Lock()
+				if !pageCache[pageUrl].Refreshing { // Check again to avoid race condition
+					entry.Stale = true
+					entry.Refreshing = true // Set the refreshing flag
+					pageCache[pageUrl] = entry
+					go refreshPageData(pageUrl) // Refresh the data in a separate goroutine
+				}
+				cacheMutex.Unlock()
+				return entry.Page, nil
+			}
 		}
-		// Invalidate the stale entry
-		invalidateCache(pageUrl)
 	}
+
+	// color.Red("Cache miss for %s", pageUrl)
+	return queryPageDataFromDB(pageUrl)
+}
+
+func refreshPageData(pageUrl string) {
+	// fmt.Printf("Refreshing cache for %s\n", pageUrl)
+	_, err := queryPageDataFromDB(pageUrl)
+	if err != nil {
+		fmt.Printf("Error refreshing page data for %s: %v\n", pageUrl, err)
+		return
+	}
+}
+
+var db *sqlx.DB
+
+func initDB() error {
+	var err error
 
 	connectionString := "user=directus dbname=directus password=Y25GUFMNeaGpEd sslmode=disable"
 	connectionString += " host=" + os.Getenv("DB_HOST")
 
-	db, err := sqlx.Connect("postgres", connectionString)
-
+	db, err = sqlx.Connect("postgres", connectionString)
 	if err != nil {
-		fmt.Println("failed to connect to db: ", err)
-		return Page{}, err
+		return err
 	}
-	defer db.Close()
+
+	// Configure the connection pool here
+	db.SetMaxOpenConns(25)                 // Set the maximum number of open connections
+	db.SetMaxIdleConns(10)                 // Set the maximum number of idle connections
+	db.SetConnMaxLifetime(5 * time.Minute) // Set the maximum amount of time a connection may be reused
+
+	return nil
+}
+
+func queryPageDataFromDB(pageUrl string) (Page, error) {
+	// fmt.Printf("Querying DB for %s\n", pageUrl)
 
 	var page Page
+	var err error
 	if pageUrl == "/" {
 		err = db.Get(&page, "SELECT id, uri, title, status FROM page WHERE uri = '' OR uri IS NULL AND status = 'published'")
 	} else {
@@ -129,24 +169,10 @@ func getPageData(pageUrl string) (Page, error) {
 
 	page.Blocks = blocks
 
-	// Update the cache
 	cacheMutex.Lock()
-	pageCache[pageUrl] = CacheEntry{Page: page, Timestamp: time.Now()}
+	pageCache[pageUrl] = CacheEntry{Page: page, Timestamp: time.Now(), Stale: false}
 	cacheMutex.Unlock()
+	// color.Yellow("Cache updated for %s\n", pageUrl)
 
 	return page, nil
-}
-
-// invalidateCache removes a specific page from the cache
-func invalidateCache(pageUrl string) {
-	cacheMutex.Lock()
-	delete(pageCache, pageUrl)
-	cacheMutex.Unlock()
-}
-
-// invalidateAllCache clears the entire page cache
-func invalidateAllCache() {
-	cacheMutex.Lock()
-	pageCache = make(map[string]CacheEntry)
-	cacheMutex.Unlock()
 }

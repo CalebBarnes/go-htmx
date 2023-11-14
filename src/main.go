@@ -17,6 +17,11 @@ func main() {
 		go startBrowserSync()
 	}
 
+	err := initDB()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+
 	server()
 }
 
