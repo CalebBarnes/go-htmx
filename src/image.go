@@ -121,13 +121,21 @@ var optimizedImageCache = make(map[string]bool)
 func optimizeImage(url string, width int, format ImageFormat) (string, error) {
 	start := time.Now()
 	cacheKey := fmt.Sprintf("%s-%d", url, width)
+	imgPath := getOptimizedImagePath(url, width, format)
 
 	// Check cache first
 	if _, exists := optimizedImageCache[cacheKey]; exists {
-		optimizedImagePath := getOptimizedImagePath(url, width, format)
-		// fmt.Println("image already processed: ", optimizedImagePath)
-		return optimizedImagePath, nil
+		// fmt.Println("image already processed and in cache: ", imgPath)
+		return imgPath, nil
 	}
+
+	// not in cache yet, check if its in the file system before downloading it
+	if _, err := os.Stat(imgPath); err == nil {
+		// fmt.Println("image already processed: ", imgPath)
+		optimizedImageCache[cacheKey] = true // Update the cache
+		return imgPath, nil
+	}
+
 	// fmt.Println("image not processed yet: ", url)
 
 	// Download the image from the URL
@@ -145,8 +153,6 @@ func optimizeImage(url string, width int, format ImageFormat) (string, error) {
 		return "", err
 	}
 
-	imgPath := getOptimizedImagePath(url, width, format)
-
 	// make sure the directory exists (without the filename)
 	err = os.MkdirAll(imgPath[:strings.LastIndex(imgPath, "/")], 0755)
 	if err != nil {
@@ -156,16 +162,8 @@ func optimizeImage(url string, width int, format ImageFormat) (string, error) {
 
 	switch format {
 	case FormatWebP:
-		color.Red("FormatWebP not supported yet, falling back to png")
+		color.Red("FormatWebP not supported yet")
 
-		// outFile, err := os.Create(imgPath)
-		// if err != nil {
-		// 	fmt.Println("failed to create file: ", err)
-		// 	return "", err
-		// }
-		// // err = imaging.Save(dstImageFill, imgPath, imaging.WebPQuality(80)) // Example quality setting
-		// err = webp.Encode(outFile, dstImageFill, &webp.Options{Lossless: false, Quality: 80})
-		// if err != nil {
 	case FormatPNG:
 		dstImageFill := imaging.Resize(srcImage, width, 0, imaging.Lanczos)
 		err = imaging.Save(dstImageFill, imgPath)
@@ -208,7 +206,6 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 
 	optimizedImagePath, err := optimizeImage(url, width, format)
 	if err != nil {
-		// Handle errors (e.g., image not found, processing error)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
