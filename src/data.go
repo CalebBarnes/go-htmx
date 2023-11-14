@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -37,6 +38,8 @@ type Block struct {
 	Data       map[string]interface{}
 }
 
+var cacheMutex sync.RWMutex
+
 type CacheEntry struct {
 	Page      Page
 	Timestamp time.Time
@@ -44,21 +47,22 @@ type CacheEntry struct {
 
 var (
 	pageCache = make(map[string]CacheEntry)
-	cacheTTL  = 30 * time.Minute // TTL of 30 minutes
+	cacheTTL  = 1 * time.Minute // TTL of 30 minutes
 )
 
 func getPageData(pageUrl string) (Page, error) {
-	// Check if the page data is available in the cache
-	if entry, found := pageCache[pageUrl]; found {
+	cacheMutex.RLock()
+	entry, found := pageCache[pageUrl]
+	cacheMutex.RUnlock()
+
+	if found {
 		// Check if the entry is still valid
 		if time.Since(entry.Timestamp) < cacheTTL {
-			// color.Green("Cache hit for %s", pageUrl)
 			return entry.Page, nil
 		}
 		// Invalidate the stale entry
-		delete(pageCache, pageUrl)
+		invalidateCache(pageUrl)
 	}
-	// color.Red("Cache miss for %s", pageUrl)
 
 	connectionString := "user=directus dbname=directus password=Y25GUFMNeaGpEd sslmode=disable"
 	connectionString += " host=" + os.Getenv("DB_HOST")
@@ -125,16 +129,24 @@ func getPageData(pageUrl string) (Page, error) {
 
 	page.Blocks = blocks
 
+	// Update the cache
+	cacheMutex.Lock()
 	pageCache[pageUrl] = CacheEntry{Page: page, Timestamp: time.Now()}
+	cacheMutex.Unlock()
 
 	return page, nil
 }
 
-// todo: implement cache invalidation when a page is updated
-// func invalidateCache(pageUrl string) {
-// 	delete(pageCache, pageUrl)
-// }
+// invalidateCache removes a specific page from the cache
+func invalidateCache(pageUrl string) {
+	cacheMutex.Lock()
+	delete(pageCache, pageUrl)
+	cacheMutex.Unlock()
+}
 
-// func invalidateAllCache() {
-// 	pageCache = make(map[string]CacheEntry)
-// }
+// invalidateAllCache clears the entire page cache
+func invalidateAllCache() {
+	cacheMutex.Lock()
+	pageCache = make(map[string]CacheEntry)
+	cacheMutex.Unlock()
+}

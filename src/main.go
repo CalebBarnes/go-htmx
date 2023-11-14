@@ -10,7 +10,7 @@ import (
 func main() {
 	banner()
 	loadEnv()
-	go bundleCss()
+	go postCSS()
 
 	if os.Getenv("APP_ENV") == "development" {
 		go watcher()

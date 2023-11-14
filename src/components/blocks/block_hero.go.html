@@ -39,8 +39,8 @@
       <div>
         {{ if .image }}
         <div>
-          <img {{getImageProps .image "sizes=(max-width: 768px) 100vw, 56rem" }} alt="My hero image" loading="eager"
-            width="500" height="500" />
+          <img {{directusImageProps .image "sizes=(max-width: 768px) 100vw, 56rem" }} alt="My hero image"
+            loading="eager" width="1920" height="1080" />
         </div>
         {{ end}}
       </div>

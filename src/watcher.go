@@ -9,17 +9,26 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/evanw/esbuild/pkg/api"
 	"github.com/fatih/color"
 	"github.com/fsnotify/fsnotify"
 )
 
-func logMsg(str string) {
-	prefix := color.CyanString("[watcher] ")
-	fmt.Println(prefix + str)
+type WatcherConfig struct {
+	directories []string
+	includedExt []string
+	silenceLogs bool
+}
+
+var watcherConfig = WatcherConfig{
+	// directories: []string{"src/templates", "src/components", "src/styles"},
+	directories: []string{"src/templates", "src/components", "src/styles"},
+	includedExt: []string{".html", ".css"},
+	silenceLogs: false,
 }
 
 func watcher() {
-	logMsg(color.GreenString("Starting file watcher..."))
+	logMsg(color.GreenString("Watching directories..."))
 
 	// Create new watcher.
 	watcher, err := fsnotify.NewWatcher()
@@ -27,11 +36,10 @@ func watcher() {
 		log.Fatal(err)
 	}
 	defer watcher.Close()
-	// Define top-level directories to watch relative to current working directory (includes subdirectories recursively)
-	directories := []string{"src/components", "src/styles"}
 
 	// Add directories to watcher and walk through them
-	for _, dir := range directories {
+	for _, dir := range watcherConfig.directories {
+		// logMsg(color.BlueString("Watching directory: " + dir))
 		addDirToWatcher(watcher, dir)
 	}
 
@@ -40,7 +48,6 @@ func watcher() {
 
 	// Block main goroutine forever.
 	<-make(chan struct{})
-
 }
 
 // watchForChanges handles file system events
@@ -75,10 +82,17 @@ func handleEvent(event fsnotify.Event, watcher *fsnotify.Watcher) {
 			watcher.Add(event.Name)
 		}
 
-		// check if file is a css file
-		if !mode.IsDir() && filepath.Ext(event.Name) == ".css" {
-			logMsg(color.GreenString("CSS file created, bundling..."))
-			go bundleCss()
+		// check if watcherConfig.includedExt
+		for _, ext := range watcherConfig.includedExt {
+			if filepath.Ext(event.Name) == ext {
+				logMsg(color.MagentaString("created: " + event.Name))
+				if ext == ".css" {
+					go postCSS()
+				} else {
+					go postCSS()
+				}
+				return
+			}
 		}
 	}
 
@@ -89,22 +103,33 @@ func handleEvent(event fsnotify.Event, watcher *fsnotify.Watcher) {
 			log.Fatal(err)
 		}
 		mode := fi.Mode()
-		if !mode.IsDir() && filepath.Ext(event.Name) == ".html" {
-			logMsg(color.MagentaString("update: " + event.Name))
-			go bundleCss()
-		} else if !mode.IsDir() && filepath.Ext(event.Name) == ".css" {
-			logMsg(color.MagentaString("update: " + event.Name))
-			go bundleCss()
-		} else {
-			logMsg(color.MagentaString("update: " + event.Name))
+		// skip directories
+		if mode.IsDir() {
+			return
+		}
+
+		for _, ext := range watcherConfig.includedExt {
+			if filepath.Ext(event.Name) == ext {
+				logMsg(color.MagentaString("update: " + event.Name))
+				if ext == ".css" {
+					go postCSS()
+				} else {
+					go postCSS()
+				}
+				return
+			}
+		}
+
+		// if RENAME, log what it was renamed to
+		if event.Op == fsnotify.Rename {
+			logMsg(color.RedString("removed: " + event.Name))
+		}
+
+		// if RENAME, log what it was renamed to
+		if event.Op == fsnotify.Rename {
+			logMsg(color.RedString("removed: " + event.Name))
 		}
 	}
-
-	// if RENAME, log what it was renamed to
-	if event.Op == fsnotify.Rename {
-		logMsg(color.RedString("removed: " + event.Name))
-	}
-
 }
 
 func addDirToWatcher(watcher *fsnotify.Watcher, dir string) {
@@ -126,61 +151,17 @@ func addDirToWatcher(watcher *fsnotify.Watcher, dir string) {
 	})
 }
 
-func bundleCss() {
-	// logMsg(color.YellowString("Generating minified CSS bundle..."))
-	// open file for writing
-	f, err := os.Create("./tmp/bundle.css")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-
-	// write global.css to bundle.css
-	globalCss, err := os.ReadFile("src/styles/global.css")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = f.Write(globalCss)
-	if err != nil {
-		// log.Fatal(err)
-		color.Red("Error writing global.css to bundle.css")
-		println(err.Error())
-	}
-
-	// write all other css files to bundle.css
-	filepath.Walk("src/styles", func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			color.Red("Error walking src/styles directory")
-			log.Fatal(err)
-		}
-
-		// skip directories
-		if info.IsDir() {
-			return nil
-		}
-		// skip global.css, as this file is added at the top of the file
-		if info.Name() == "global.css" {
-			return nil
-		}
-		// read file
-		css, err := os.ReadFile(path)
-		if err != nil {
-			log.Fatal(err)
-		}
-		// write file to bundle.css
-		_, err = f.Write(css)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		return nil
-	})
-
-	// measure how long this command takes to execute
+func postCSS() {
 	start := time.Now()
 
-	cmd := exec.Command("./node_modules/.bin/postcss", "-o", ".generated/css/main.css", "tmp/bundle.css")
+	outputPath := "tmp/css/bundled.css"
+
+	cmd := exec.Command(
+		"./node_modules/.bin/postcss",
+		"src/styles/main.css",
+		"-o", outputPath,
+		"--config", "postcss.config.js")
+
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	cmdErr := cmd.Run()
@@ -189,18 +170,49 @@ func bundleCss() {
 		return
 	}
 
-	duration := time.Since(start)
-
-	logMsg(color.GreenString("PostCSS finished in " + duration.String()))
+	logMsg(color.GreenString("PostCSS finished in %0.2fms", time.Since(start).Seconds()*1000))
+	esbuildCSS()
 }
 
 func startBrowserSync() {
-	cmd := exec.Command("./node_modules/.bin/browser-sync", "start", "--proxy", "localhost:"+os.Getenv("PORT"), "--files", "'static/css/*.css, src/templates/*.html, src/components/**/*.html, *.go'", "--no-notify", "--plugins", "bs-html-injector?files[]=*.html", "--no-open")
+	cmd := exec.Command(
+		"./node_modules/.bin/browser-sync", "start",
+		"--proxy", "localhost:"+os.Getenv("PORT"),
+		"--files",
+		"'.generated/css, .generated/css/main.css, src/templates/*.html, src/components/**/*.html, src/styles/*.css'",
+		"--plugins", "bs-html-injector?files[]=*.html",
+		"--no-notify",
+		"--no-open")
+
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	cmdErr := cmd.Run()
+
 	if cmdErr != nil {
 		color.Red(fmt.Sprint(cmdErr) + ": " + stderr.String())
 		return
 	}
+}
+
+func esbuildCSS() {
+	start := time.Now()
+
+	result := api.Build(api.BuildOptions{
+		EntryPoints:       []string{"tmp/css/bundled.css"},
+		Bundle:            true,
+		Outfile:           ".generated/css/main.css",
+		Write:             true,
+		Target:            api.ES2015,
+		MinifySyntax:      true,
+		MinifyWhitespace:  true,
+		MinifyIdentifiers: true,
+	})
+
+	if len(result.Errors) > 0 {
+		logMsg(color.RedString("Error esbuildCSS:"))
+		os.Stderr.WriteString(result.Errors[0].Text)
+		os.Exit(1)
+	}
+
+	logMsg(color.GreenString("Esbuild finished minifying CSS in %0.2fms", time.Since(start).Seconds()*1000))
 }

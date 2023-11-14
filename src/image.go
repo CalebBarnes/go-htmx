@@ -17,55 +17,46 @@ import (
 	"github.com/fatih/color"
 )
 
-// todo, get the request headers here and check the Accept header for what image types are supported
-// text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
-func getImageProps(headers http.Header, id string, options ...string) template.HTMLAttr {
-	color.Red("getImageProps called with id: " + id)
+const ImageBaseRoute = "/_image"
 
+type ImageFormat string
+
+const (
+	FormatWebP ImageFormat = "webp"
+	FormatPNG  ImageFormat = "png"
+)
+
+func getSupportedImageFormat(headers http.Header) ImageFormat {
+	return FormatPNG
+	// acceptHeader := headers.Get("Accept")
+	// if strings.Contains(acceptHeader, "image/webp") {
+	// 	return FormatWebP
+	// } else {
+	// 	return FormatPNG // Default to PNG if no specific format is requested
+	// }
+}
+
+func getImageProps(headers http.Header, imageUrl string, options ...string) template.HTMLAttr {
 	attrs := make(map[string]string)
 	order := []string{"src"} // Start with src as the first key
-	imageUrl := os.Getenv("DIRECTUS_URL") + "/assets/" + id
+	// imageUrl := os.Getenv("DIRECTUS_URL") + "/assets/" + id
 	maxWidth := 1920 // Default maxWidth
 	customSrcsetProvided := false
 	customSizesProvided := false
-	// customWidthProvided := false
-	// customHeightProvided := false
 
-	// get list of supported image types from the Accept header
-	// if the Accept header is */*, assume all types are supported
-	// if the Accept header is empty, assume all types are supported
-	// if the Accept header is not empty, assume only the types in the header are supported
+	imageFormat := getSupportedImageFormat(headers)
 
-	acceptHeader := headers.Get("Accept")
-
-	imageTypes := []string{"image/png", "image/jpeg", "image/webp", "image/avif"}
-	acceptedImageTypes := []string{}
-
-	if acceptHeader == "*/*" || acceptHeader == "" {
-		acceptedImageTypes = imageTypes
-	} else {
-		for _, imageType := range imageTypes {
-			if strings.Contains(acceptHeader, imageType) {
-				acceptedImageTypes = append(acceptedImageTypes, imageType)
-			}
-		}
-	}
-
-	color.Green("acceptedImageTypes: " + strings.Join(acceptedImageTypes, ", "))
-
-	// attrs["src"] = fmt.Sprintf("/.generated/images/image.png?url=%s&width=%d", url.QueryEscape(imageUrl), maxWidth)
+	attrs["src"] = fmt.Sprintf(ImageBaseRoute+"/image.%s?url=%s&width=%d", imageFormat, url.QueryEscape(imageUrl), maxWidth)
 
 	for _, option := range options {
 		parts := strings.Split(option, "=")
 		if len(parts) == 2 {
 			key := parts[0]
 			value := parts[1]
-
 			// Add key to order if it's a new key and not srcset or sizes
 			if _, exists := attrs[key]; !exists && key != "srcset" && key != "sizes" {
 				order = append(order, key)
 			}
-
 			switch key {
 			case "maxWidth":
 				var err error
@@ -73,36 +64,17 @@ func getImageProps(headers http.Header, id string, options ...string) template.H
 				if err != nil {
 					maxWidth = 1920 // Reset to default if conversion fails
 				}
-
 			case "srcset":
 				customSrcsetProvided = true
 				attrs["srcset"] = value // Use the provided custom srcset
 			case "sizes":
 				customSizesProvided = true
 				attrs["sizes"] = value // Use the provided custom sizes
-
-			// case "width":
-			// 	customWidthProvided = true
-			// 	attrs["width"] = value // Use the provided custom width
-			// case "height":
-			// 	customHeightProvided = true
-			// 	attrs["height"] = value // Use the provided custom height
-
 			default:
 				attrs[key] = value // Handle other valid attributes
 			}
 		}
 	}
-
-	// // Generate default width if not provided
-	// if !customWidthProvided {
-	// 	attrs["width"] = "100%"
-	// }
-
-	// // Generate default height if not provided
-	// if !customHeightProvided {
-	// 	attrs["height"] = "auto"
-	// }
 
 	// Generate default sizes if not provided
 	if !customSizesProvided {
@@ -112,7 +84,7 @@ func getImageProps(headers http.Header, id string, options ...string) template.H
 
 	// Generate default srcset if not provided
 	if !customSrcsetProvided {
-		attrs["srcset"] = generateDefaultSrcset(imageUrl, maxWidth)
+		attrs["srcset"] = generateSrcset(imageUrl, maxWidth, imageFormat)
 		order = append(order, "srcset") // Add srcset to the order
 	}
 
@@ -126,11 +98,11 @@ func getImageProps(headers http.Header, id string, options ...string) template.H
 	return template.HTMLAttr(b.String())
 }
 
-func generateDefaultSrcset(imageUrl string, maxWidth int) string {
+func generateSrcset(imageUrl string, maxWidth int, format ImageFormat) string {
 	widths := generateWidths(maxWidth)
 	srcsetValues := make([]string, len(widths))
 	for i, width := range widths {
-		optimizedImageUrl := fmt.Sprintf("/.generated/images/image.png?url=%s&width=%d", url.QueryEscape(imageUrl), width)
+		optimizedImageUrl := fmt.Sprintf(ImageBaseRoute+"/image.%s?url=%s&width=%d", format, url.QueryEscape(imageUrl), width)
 		srcsetValues[i] = fmt.Sprintf("%s %dw", optimizedImageUrl, width)
 	}
 	return strings.Join(srcsetValues, ", ")
@@ -146,13 +118,13 @@ func generateWidths(maxWidth int) []int {
 // simple in-memory cache
 var optimizedImageCache = make(map[string]bool)
 
-func optimizeImage(url string, width int) (string, error) {
+func optimizeImage(url string, width int, format ImageFormat) (string, error) {
 	start := time.Now()
 	cacheKey := fmt.Sprintf("%s-%d", url, width)
 
 	// Check cache first
 	if _, exists := optimizedImageCache[cacheKey]; exists {
-		optimizedImagePath := getOptimizedImagePath(url, width)
+		optimizedImagePath := getOptimizedImagePath(url, width, format)
 		// fmt.Println("image already processed: ", optimizedImagePath)
 		return optimizedImagePath, nil
 	}
@@ -173,10 +145,7 @@ func optimizeImage(url string, width int) (string, error) {
 		return "", err
 	}
 
-	// Image processing logic
-	dstImageFill := imaging.Fill(srcImage, width, width, imaging.Center, imaging.Lanczos)
-
-	imgPath := getOptimizedImagePath(url, width) // example .generated/images/3f6efd64ad786567e3ad5f558e01238bdb079ee3/500w.jpg
+	imgPath := getOptimizedImagePath(url, width, format)
 
 	// make sure the directory exists (without the filename)
 	err = os.MkdirAll(imgPath[:strings.LastIndex(imgPath, "/")], 0755)
@@ -185,28 +154,39 @@ func optimizeImage(url string, width int) (string, error) {
 		return "", err
 	}
 
-	// Save the file in .generated/images/<imageID>/<width>.jpg
-	err = imaging.Save(dstImageFill, imgPath)
+	switch format {
+	case FormatWebP:
+		color.Red("FormatWebP not supported yet, falling back to png")
 
-	if err != nil {
-		fmt.Println("failed to save image: ", err)
-		return "", err
+		// outFile, err := os.Create(imgPath)
+		// if err != nil {
+		// 	fmt.Println("failed to create file: ", err)
+		// 	return "", err
+		// }
+		// // err = imaging.Save(dstImageFill, imgPath, imaging.WebPQuality(80)) // Example quality setting
+		// err = webp.Encode(outFile, dstImageFill, &webp.Options{Lossless: false, Quality: 80})
+		// if err != nil {
+	case FormatPNG:
+		dstImageFill := imaging.Resize(srcImage, width, 0, imaging.Lanczos)
+		err = imaging.Save(dstImageFill, imgPath)
+		if err != nil {
+			fmt.Println("failed to save image: ", err)
+			return "", err
+		}
+
 	}
 
 	// Update the cache
 	optimizedImageCache[cacheKey] = true
-
 	// Log time duration
 	duration := time.Since(start)
 	fmt.Println("image processed: ", duration)
-
-	return getOptimizedImagePath(url, width), nil
+	return getOptimizedImagePath(url, width, format), nil
 }
 
-func getOptimizedImagePath(url string, width int) string {
-	// encode url to be safe for urls and file systems
+func getOptimizedImagePath(url string, width int, format ImageFormat) string {
 	safeImageName := convertURLToFilePath(url)
-	return fmt.Sprintf(".generated/images/%s/%dw.jpg", safeImageName, width)
+	return fmt.Sprintf(".generated/images/%s/%dw.%s", safeImageName, width, format)
 }
 func convertURLToFilePath(url string) string {
 	h := sha1.New()
@@ -224,15 +204,14 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	optimizedImagePath, err := optimizeImage(url, width)
+	format := getSupportedImageFormat(r.Header)
+
+	optimizedImagePath, err := optimizeImage(url, width, format)
 	if err != nil {
 		// Handle errors (e.g., image not found, processing error)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// Set cache control headers
-	w.Header().Set("Cache-Control", "public, max-age=15552000")
 
 	// Serve the optimized image
 	http.ServeFile(w, r, optimizedImagePath)

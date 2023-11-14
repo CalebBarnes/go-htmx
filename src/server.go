@@ -6,20 +6,21 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
 func server() {
-	versionHash := getVersionHash()
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		pageData, err := getPageData(r.URL.Path)
 		if err != nil {
-			notFound(w, r, versionHash)
+			notFound(w, r)
 		} else {
-			pageTemplate(pageData, w, r, versionHash)
+			pageTemplate(pageData, w, r)
 		}
 	})
 
@@ -39,12 +40,14 @@ func server() {
 	})
 
 	// Handler for image optimization
-	mux.Handle("/.generated/images/", http.HandlerFunc(imageHandler))
+	mux.Handle(ImageBaseRoute+"/", http.HandlerFunc(imageHandler))
 
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), mux))
 }
 
-func pageTemplate(pageData Page, w http.ResponseWriter, r *http.Request, versionHash string) {
+func pageTemplate(pageData Page, w http.ResponseWriter, r *http.Request) {
+	versionHash := getVersionHash()
+
 	data := map[string]interface {
 	}{
 		"Version": versionHash,
@@ -55,30 +58,34 @@ func pageTemplate(pageData Page, w http.ResponseWriter, r *http.Request, version
 		"Data": pageData,
 	}
 
-	// Closure that captures headers and calls getImageProps
-	getImagePropsWithContext := func(id string, otherParams ...string) template.HTMLAttr {
-		return getImageProps(r.Header, id, otherParams...)
+	getImagePropsWithContext := func(imageUrl string, otherParams ...string) template.HTMLAttr {
+		return getImageProps(r.Header, imageUrl, otherParams...)
+	}
+
+	getImageByIdWithContext := func(id string, otherParams ...string) template.HTMLAttr {
+		imageUrl := os.Getenv("DIRECTUS_URL") + "/assets/" + id
+		return getImageProps(r.Header, imageUrl, otherParams...)
 	}
 
 	tmpl, err := template.ParseFiles("src/templates/index.go.html")
 	if err != nil {
 		log.Fatalf("Error parsing main template: %v", err)
 	}
+
 	tmpl.Funcs(template.FuncMap{
 		// Render HTML in a template without escaping it (or any other strings)
 		"noescape": func(str string) template.HTML {
 			return template.HTML(str)
 		},
-		"getImageProps": getImagePropsWithContext,
+		"imageProps":         getImagePropsWithContext,
+		"directusImageProps": getImageByIdWithContext,
 	})
-	tmpl, err = tmpl.ParseGlob("src/components/*.go.html")
+
+	err = appendTemplates(tmpl, "src/components", ".go.html")
 	if err != nil {
-		log.Fatalf("Error parsing component templates: %v", err)
+		log.Fatalf("Error parsing templates: %v", err)
 	}
-	tmpl, err = tmpl.ParseGlob("src/components/blocks/*.go.html")
-	if err != nil {
-		log.Fatalf("Error parsing block templates: %v", err)
-	}
+
 	tmpl, err = tmpl.Parse(blocksTemplateBuilder(pageData.Blocks))
 	if err != nil {
 		log.Fatalf("Error parsing block templates: %v", err)
@@ -94,7 +101,9 @@ func pageTemplate(pageData Page, w http.ResponseWriter, r *http.Request, version
 	}
 }
 
-func notFound(w http.ResponseWriter, r *http.Request, versionHash string) {
+func notFound(w http.ResponseWriter, r *http.Request) {
+	versionHash := getVersionHash()
+
 	tmpl := template.Must(template.ParseFiles("src/templates/404.go.html"))
 	template.Must(tmpl.ParseGlob("src/components/*.go.html"))
 	data := map[string]interface{}{
@@ -152,10 +161,25 @@ func getVersionHash() string {
 
 	if os.Getenv("APP_ENV") == "development" {
 		versionHash = strconv.FormatInt(time.Now().UnixNano(), 10)
-	} else if version != "" {
+	} else if version == "" {
 		versionHash = version
 	}
 
-	println("Version hash: ", versionHash)
 	return versionHash
+}
+
+func appendTemplates(tmpl *template.Template, rootDir, suffix string) error {
+	return filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() && strings.HasSuffix(path, suffix) {
+			_, err := tmpl.ParseFiles(path)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
