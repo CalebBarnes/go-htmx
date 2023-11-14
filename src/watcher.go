@@ -13,7 +13,14 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+func logMsg(str string) {
+	prefix := color.CyanString("[watcher] ")
+	fmt.Println(prefix + str)
+}
+
 func watcher() {
+	logMsg(color.GreenString("Starting file watcher..."))
+
 	// Create new watcher.
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -64,13 +71,13 @@ func handleEvent(event fsnotify.Event, watcher *fsnotify.Watcher) {
 		}
 		mode := fi.Mode()
 		if mode.IsDir() {
-			color.Green("added directory: " + event.Name)
+			logMsg(color.GreenString("added directory: " + event.Name))
 			watcher.Add(event.Name)
 		}
 
 		// check if file is a css file
 		if !mode.IsDir() && filepath.Ext(event.Name) == ".css" {
-			color.Green("CSS file created, bundling...")
+			logMsg(color.GreenString("CSS file created, bundling..."))
 			go bundleCss()
 		}
 	}
@@ -83,17 +90,19 @@ func handleEvent(event fsnotify.Event, watcher *fsnotify.Watcher) {
 		}
 		mode := fi.Mode()
 		if !mode.IsDir() && filepath.Ext(event.Name) == ".html" {
+			logMsg(color.MagentaString("update: " + event.Name))
 			go bundleCss()
 		} else if !mode.IsDir() && filepath.Ext(event.Name) == ".css" {
+			logMsg(color.MagentaString("update: " + event.Name))
 			go bundleCss()
 		} else {
-			color.Green("file changed: " + event.Name)
+			logMsg(color.MagentaString("update: " + event.Name))
 		}
 	}
 
 	// if RENAME, log what it was renamed to
 	if event.Op == fsnotify.Rename {
-		color.Red("removed: " + event.Name)
+		logMsg(color.RedString("removed: " + event.Name))
 	}
 
 }
@@ -103,14 +112,14 @@ func addDirToWatcher(watcher *fsnotify.Watcher, dir string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	color.Blue(dir)
+	logMsg(color.BlueString(dir))
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			// skip if same as top-level dir
 			if path == dir {
 				return nil
 			}
-			color.Blue("|-- " + path[len(dir)+1:])
+			logMsg(color.BlueString("|-- " + path[len(dir)+1:]))
 			watcher.Add(path)
 		}
 		return nil
@@ -118,7 +127,7 @@ func addDirToWatcher(watcher *fsnotify.Watcher, dir string) {
 }
 
 func bundleCss() {
-	color.Green("Bundling CSS...")
+	// logMsg(color.YellowString("Generating minified CSS bundle..."))
 	// open file for writing
 	f, err := os.Create("./tmp/bundle.css")
 	if err != nil {
@@ -182,7 +191,7 @@ func bundleCss() {
 
 	duration := time.Since(start)
 
-	color.Green("Bundled CSS in " + duration.String())
+	logMsg(color.GreenString("PostCSS finished in " + duration.String()))
 }
 
 func startBrowserSync() {

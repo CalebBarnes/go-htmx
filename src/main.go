@@ -14,9 +14,9 @@ func main() {
 
 	if os.Getenv("APP_ENV") == "development" {
 		go watcher()
+		go startBrowserSync()
 	}
 
-	go startBrowserSync()
 	server()
 }
 

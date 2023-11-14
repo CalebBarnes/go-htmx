@@ -14,15 +14,46 @@ import (
 	"time"
 
 	"github.com/disintegration/imaging"
+	"github.com/fatih/color"
 )
 
-func getImageProps(id string, options ...string) template.HTMLAttr {
+// todo, get the request headers here and check the Accept header for what image types are supported
+// text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+func getImageProps(headers http.Header, id string, options ...string) template.HTMLAttr {
+	color.Red("getImageProps called with id: " + id)
+
 	attrs := make(map[string]string)
 	order := []string{"src"} // Start with src as the first key
 	imageUrl := os.Getenv("DIRECTUS_URL") + "/assets/" + id
 	maxWidth := 1920 // Default maxWidth
 	customSrcsetProvided := false
 	customSizesProvided := false
+	// customWidthProvided := false
+	// customHeightProvided := false
+
+	// get list of supported image types from the Accept header
+	// if the Accept header is */*, assume all types are supported
+	// if the Accept header is empty, assume all types are supported
+	// if the Accept header is not empty, assume only the types in the header are supported
+
+	acceptHeader := headers.Get("Accept")
+
+	imageTypes := []string{"image/png", "image/jpeg", "image/webp", "image/avif"}
+	acceptedImageTypes := []string{}
+
+	if acceptHeader == "*/*" || acceptHeader == "" {
+		acceptedImageTypes = imageTypes
+	} else {
+		for _, imageType := range imageTypes {
+			if strings.Contains(acceptHeader, imageType) {
+				acceptedImageTypes = append(acceptedImageTypes, imageType)
+			}
+		}
+	}
+
+	color.Green("acceptedImageTypes: " + strings.Join(acceptedImageTypes, ", "))
+
+	// attrs["src"] = fmt.Sprintf("/.generated/images/image.png?url=%s&width=%d", url.QueryEscape(imageUrl), maxWidth)
 
 	for _, option := range options {
 		parts := strings.Split(option, "=")
@@ -49,11 +80,29 @@ func getImageProps(id string, options ...string) template.HTMLAttr {
 			case "sizes":
 				customSizesProvided = true
 				attrs["sizes"] = value // Use the provided custom sizes
+
+			// case "width":
+			// 	customWidthProvided = true
+			// 	attrs["width"] = value // Use the provided custom width
+			// case "height":
+			// 	customHeightProvided = true
+			// 	attrs["height"] = value // Use the provided custom height
+
 			default:
 				attrs[key] = value // Handle other valid attributes
 			}
 		}
 	}
+
+	// // Generate default width if not provided
+	// if !customWidthProvided {
+	// 	attrs["width"] = "100%"
+	// }
+
+	// // Generate default height if not provided
+	// if !customHeightProvided {
+	// 	attrs["height"] = "auto"
+	// }
 
 	// Generate default sizes if not provided
 	if !customSizesProvided {
@@ -66,8 +115,6 @@ func getImageProps(id string, options ...string) template.HTMLAttr {
 		attrs["srcset"] = generateDefaultSrcset(imageUrl, maxWidth)
 		order = append(order, "srcset") // Add srcset to the order
 	}
-
-	attrs["src"] = fmt.Sprintf("/.generated/images/image.png?url=%s&width=%d", url.QueryEscape(imageUrl), maxWidth)
 
 	var b strings.Builder
 	for _, key := range order {

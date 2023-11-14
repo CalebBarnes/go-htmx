@@ -44,14 +44,6 @@ func server() {
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), mux))
 }
 
-var funcMap = template.FuncMap{
-	// Render HTML in a template without escaping it (or any other strings)
-	"noescape": func(str string) template.HTML {
-		return template.HTML(str)
-	},
-	"getImageProps": getImageProps,
-}
-
 func pageTemplate(pageData Page, w http.ResponseWriter, r *http.Request, versionHash string) {
 	data := map[string]interface {
 	}{
@@ -63,17 +55,22 @@ func pageTemplate(pageData Page, w http.ResponseWriter, r *http.Request, version
 		"Data": pageData,
 	}
 
-	if version == "development" {
-		data["Env"] = "development"
-	} else {
-		data["Env"] = "production"
+	// Closure that captures headers and calls getImageProps
+	getImagePropsWithContext := func(id string, otherParams ...string) template.HTMLAttr {
+		return getImageProps(r.Header, id, otherParams...)
 	}
 
 	tmpl, err := template.ParseFiles("src/templates/index.go.html")
 	if err != nil {
 		log.Fatalf("Error parsing main template: %v", err)
 	}
-	tmpl.Funcs(funcMap)
+	tmpl.Funcs(template.FuncMap{
+		// Render HTML in a template without escaping it (or any other strings)
+		"noescape": func(str string) template.HTML {
+			return template.HTML(str)
+		},
+		"getImageProps": getImagePropsWithContext,
+	})
 	tmpl, err = tmpl.ParseGlob("src/components/*.go.html")
 	if err != nil {
 		log.Fatalf("Error parsing component templates: %v", err)

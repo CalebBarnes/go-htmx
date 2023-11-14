@@ -39,15 +39,6 @@ p {
   @apply text-base;
 }
 
-/* 
-  a {
-    @apply text-blue-500;
-  } */
-
-/* a:hover {
-    @apply text-blue-700;
-  } */
-
 blockquote {
   @apply my-8 border-l-4 border-gray-200 py-4 pl-8 italic;
 }
