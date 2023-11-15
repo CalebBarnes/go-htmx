@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -21,12 +20,7 @@ func main() {
 }
 
 func loadEnv() {
-	if os.Getenv("APP_ENV") == "development" {
-		err := godotenv.Load(".env") // load .env file
-		if err != nil {
-			log.Fatal("Error loading .env file")
-		}
-	}
+	godotenv.Load(".env") // load .env file
 
 	appEnv := os.Getenv("APP_ENV")
 	println("APP_ENV: ", appEnv)
