@@ -20,7 +20,12 @@ func main() {
 }
 
 func loadEnv() {
-	godotenv.Load(".env") // load .env file
+	os.Setenv("APP_ENV", "production")
+	err := godotenv.Load(".env") // load .env file
+	if err == nil {
+		println("Error loading .env file")
+		os.Setenv("APP_ENV", "development")
+	}
 
 	appEnv := os.Getenv("APP_ENV")
 	println("APP_ENV: ", appEnv)
