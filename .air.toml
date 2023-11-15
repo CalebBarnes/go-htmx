@@ -2,12 +2,6 @@ root = "."
 testdata_dir = "testdata"
 tmp_dir = "tmp"
 
-[watcher]
-cmd = ["echo 'test"]
-exts = ["go", "tpl", "tmpl", "html"]
-
-
-
 [build]
   args_bin = []
   delay = 1000
@@ -27,7 +21,7 @@ exts = ["go", "tpl", "tmpl", "html"]
   log = "air.log"
   poll = false
   poll_interval = 0
-  pre_cmd = []
+  pre_cmd = ["open http://localhost:3000"]
   post_cmd = ["kill -9 $(lsof -t -i:42069 -sTCP:LISTEN)"]
   rerun = false
   rerun_delay = 500

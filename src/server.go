@@ -137,7 +137,8 @@ func blocksTemplateBuilder(blocks []Block) string {
 				`
 	for _, block := range blocks {
 		// Check if template file exists
-		if fileExists("src/components/blocks/" + block.Collection + ".go.html") {
+		blockFileName := strings.Replace(block.Collection, "block_", "", 1)
+		if fileExists("src/components/blocks/" + blockFileName + ".go.html") {
 			blockBuilderStr += `
 					{{ else if eq .Collection "` + block.Collection + `" }}
 						{{ template "` + block.Collection + `" .Data }}
