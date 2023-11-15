@@ -1,12 +1,13 @@
 <!doctype html>
-<html lang="en" class="h-full">
-  {{ template "head" . }}
+<html lang="en" class="h-full dark">
+{{ template "head" . }}
 
-  <body hx-ext="preload" class="flex min-h-screen flex-col justify-between">
-    <div>
-      {{ template "navbar" . }}
+<body hx-ext="preload" class="flex min-h-screen flex-col justify-between">
+  <div>
+    {{ template "navbar" . }}
 
-      <main>{{ template "blocks" . }}</main>
-    </div>
-  </body>
+    <main>{{ template "blocks" . }}</main>
+  </div>
+</body>
+
 </html>

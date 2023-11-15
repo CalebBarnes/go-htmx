@@ -38,14 +38,14 @@ type Block struct {
 	Data       map[string]interface{}
 }
 
-var cacheMutex sync.RWMutex
-
 type CacheEntry struct {
 	Page       Page
 	Timestamp  time.Time
 	Stale      bool
 	Refreshing bool // New field to indicate a refresh is in progress
 }
+
+var cacheMutex sync.RWMutex
 
 var (
 	pageCache = make(map[string]CacheEntry)

@@ -27,4 +27,9 @@
     "**/bin": true
   },
   "css.customData": [".vscode/tailwind.json"]
+  // "workbench.colorCustomizations": {
+  //   "activityBar.background": "#163414",
+  //   "titleBar.activeBackground": "#1F481C",
+  //   "titleBar.activeForeground": "#F5FBF5"
+  // }
 }

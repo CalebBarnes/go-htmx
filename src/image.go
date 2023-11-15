@@ -26,22 +26,11 @@ const (
 	FormatPNG  ImageFormat = "png"
 )
 
-func getSupportedImageFormat(headers http.Header) ImageFormat {
-	return FormatPNG
-	// acceptHeader := headers.Get("Accept")
-	// if strings.Contains(acceptHeader, "image/webp") {
-	// 	return FormatWebP
-	// } else {
-	// 	return FormatPNG // Default to PNG if no specific format is requested
-	// }
-}
-
 func getImageProps(headers http.Header, imageUrl string, options ...string) template.HTMLAttr {
 	attrs := make(map[string]string)
 	order := []string{"src"} // Start with src as the first key
-	// imageUrl := os.Getenv("DIRECTUS_URL") + "/assets/" + id
-	maxWidth := 1920 // Default maxWidth
-	customSrcsetProvided := false
+	maxWidth := 1920         // Default maxWidth
+	// customSrcsetProvided := false
 	customSizesProvided := false
 
 	imageFormat := getSupportedImageFormat(headers)
@@ -57,16 +46,26 @@ func getImageProps(headers http.Header, imageUrl string, options ...string) temp
 			if _, exists := attrs[key]; !exists && key != "srcset" && key != "sizes" {
 				order = append(order, key)
 			}
+
 			switch key {
-			case "maxWidth":
-				var err error
-				maxWidth, err = strconv.Atoi(value)
-				if err != nil {
-					maxWidth = 1920 // Reset to default if conversion fails
+			case "layout":
+				if value == "fill" {
+					attrs["style"] = "position: absolute; height: 100%; width: 100%; inset: 0px; color: transparent;"
 				}
-			case "srcset":
-				customSrcsetProvided = true
-				attrs["srcset"] = value // Use the provided custom srcset
+				// switch value {
+				// case "fill":
+				// attrs["style"] = "object-fit: cover; object-position: center center;"
+				// }
+
+			case "style":
+				attrs["style"] += " " + value
+			// case "maxWidth":
+			// var err error
+			// maxWidth, err = strconv.Atoi(value)
+			// if err != nil {
+			// 	maxWidth = 1920 // Reset to default if conversion fails
+			// }
+
 			case "sizes":
 				customSizesProvided = true
 				attrs["sizes"] = value // Use the provided custom sizes
@@ -78,15 +77,15 @@ func getImageProps(headers http.Header, imageUrl string, options ...string) temp
 
 	// Generate default sizes if not provided
 	if !customSizesProvided {
-		attrs["sizes"] = "(max-width: 600px) 100vw, (max-width: 1024px) 50vw, 25vw"
+		attrs["sizes"] = "(max-width: 768px) 100vw, 56rem"
 		order = append(order, "sizes") // Add sizes to the order
 	}
 
-	// Generate default srcset if not provided
-	if !customSrcsetProvided {
-		attrs["srcset"] = generateSrcset(imageUrl, maxWidth, imageFormat)
-		order = append(order, "srcset") // Add srcset to the order
-	}
+	attrs["srcset"] = generateSrcset(imageUrl, maxWidth, imageFormat)
+	order = append(order, "srcset") // Add srcset to the order
+	order = append(order, "style")
+	attrs["decoding"] = "async"
+	order = append(order, "decoding")
 
 	var b strings.Builder
 	for _, key := range order {
@@ -118,6 +117,16 @@ func generateWidths(maxWidth int) []int {
 // simple in-memory cache
 var optimizedImageCache = make(map[string]bool)
 
+func getSupportedImageFormat(headers http.Header) ImageFormat {
+	return FormatPNG
+	// acceptHeader := headers.Get("Accept")
+	// if strings.Contains(acceptHeader, "image/webp") {
+	// 	return FormatWebP
+	// } else {
+	// 	return FormatPNG // Default to PNG if no specific format is requested
+	// }
+}
+
 func optimizeImage(url string, width int, format ImageFormat) (string, error) {
 	start := time.Now()
 	cacheKey := fmt.Sprintf("%s-%d", url, width)
@@ -148,6 +157,7 @@ func optimizeImage(url string, width int, format ImageFormat) (string, error) {
 
 	// Decode the image
 	srcImage, _, err := image.Decode(resp.Body)
+
 	if err != nil {
 		fmt.Println("failed to decode image: ", err)
 		return "", err
@@ -163,6 +173,23 @@ func optimizeImage(url string, width int, format ImageFormat) (string, error) {
 	switch format {
 	case FormatWebP:
 		color.Red("FormatWebP not supported yet")
+
+		// buffer, err := bimg.Read("image.jpg")
+		// if err != nil {
+		// 	fmt.Fprintln(os.Stderr, err)
+		// }
+
+		// newImage, err := bimg.NewImage(srcImage).Resize(800, 600)
+		// if err != nil {
+		// 	fmt.Fprintln(os.Stderr, err)
+		// }
+
+		// size, err := bimg.NewImage(newImage).Size()
+		// if size.Width == 800 && size.Height == 600 {
+		// 	fmt.Println("The image size is valid")
+		// }
+
+		// bimg.Write("new.jpg", newImage)
 
 	case FormatPNG:
 		dstImageFill := imaging.Resize(srcImage, width, 0, imaging.Lanczos)
