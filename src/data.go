@@ -95,7 +95,10 @@ var db *sqlx.DB
 func initDB() error {
 	var err error
 
-	connectionString := "user=directus dbname=directus password=Y25GUFMNeaGpEd sslmode=disable"
+	connectionString := "sslmode=disable"
+	connectionString += " user=" + os.Getenv("DB_USER")
+	connectionString += " dbname=" + os.Getenv("DB_NAME")
+	connectionString += " password=" + os.Getenv("DB_PASSWORD")
 	connectionString += " host=" + os.Getenv("DB_HOST")
 
 	db, err = sqlx.Connect("postgres", connectionString)

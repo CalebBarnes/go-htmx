@@ -174,26 +174,6 @@ func postCSS() {
 	esbuildCSS()
 }
 
-func startBrowserSync() {
-	cmd := exec.Command(
-		"./node_modules/.bin/browser-sync", "start",
-		"--proxy", "localhost:"+os.Getenv("PORT"),
-		"--files",
-		"'.generated/css, .generated/css/main.css, src/templates/*.html, src/components/**/*.html, src/styles/*.css'",
-		"--plugins", "bs-html-injector?files[]=*.html",
-		"--no-notify",
-		"--no-open")
-
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	cmdErr := cmd.Run()
-
-	if cmdErr != nil {
-		color.Red(fmt.Sprint(cmdErr) + ": " + stderr.String())
-		return
-	}
-}
-
 func esbuildCSS() {
 	start := time.Now()
 
@@ -215,4 +195,24 @@ func esbuildCSS() {
 	}
 
 	logMsg(color.GreenString("Esbuild finished minifying CSS in %0.2fms", time.Since(start).Seconds()*1000))
+}
+
+func startBrowserSync() {
+	cmd := exec.Command(
+		"./node_modules/.bin/browser-sync", "start",
+		"--proxy", "localhost:"+os.Getenv("PORT"),
+		"--files",
+		"'.generated/css, .generated/css/main.css, src/templates/*.html, src/components/**/*.html, src/styles/*.css'",
+		"--plugins", "bs-html-injector?files[]=*.html",
+		"--no-notify",
+		"--no-open")
+
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmdErr := cmd.Run()
+
+	if cmdErr != nil {
+		color.Red(fmt.Sprint(cmdErr) + ": " + stderr.String())
+		return
+	}
 }
