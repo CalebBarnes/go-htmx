@@ -170,13 +170,11 @@ func postCSS() {
 		return
 	}
 
-	logMsg(color.GreenString("PostCSS finished in %0.2fms", time.Since(start).Seconds()*1000))
 	esbuildCSS()
+	logMsg(color.GreenString("CSS generated %0.2fms", time.Since(start).Seconds()*1000))
 }
 
 func esbuildCSS() {
-	start := time.Now()
-
 	result := api.Build(api.BuildOptions{
 		EntryPoints:       []string{"tmp/css/bundled.css"},
 		Bundle:            true,
@@ -191,10 +189,8 @@ func esbuildCSS() {
 	if len(result.Errors) > 0 {
 		logMsg(color.RedString("Error esbuildCSS:"))
 		os.Stderr.WriteString(result.Errors[0].Text)
-		os.Exit(1)
+		// os.Exit(1)
 	}
-
-	logMsg(color.GreenString("Esbuild finished minifying CSS in %0.2fms", time.Since(start).Seconds()*1000))
 }
 
 func startBrowserSync() {

@@ -42,8 +42,6 @@ func server() {
 	// Handler for image optimization
 	mux.Handle(ImageBaseRoute+"/", maxAgeHandler(15552000, http.HandlerFunc(imageRouteHandler)))
 
-	// log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), mux))
-
 	httpServer := &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),
 		Handler: mux,
@@ -53,14 +51,20 @@ func server() {
 	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		log.Printf("Listening on port %s\n", os.Getenv("PORT"))
+		banner()
+		println(
+			color.BlueString(`	⚡️Cookie Go 1.0.0`) + "\n" +
+				color.WhiteString(`	- Server started at http://localhost:`+os.Getenv("PORT")) + "\n" +
+				color.WhiteString(`	- BrowserSync proxy started at http://localhost:3000`) + "\n" +
+				color.WhiteString(`	- Environment: `+os.Getenv("APP_ENV")))
+
 		if err := httpServer.ListenAndServe(); err != nil {
 			color.Red("Error starting server: %s\n", err)
 			log.Fatal(err)
 		}
 	}()
 
-	// block
+	// block until a signal is received.
 	<-stopChan
 	log.Println("Shutting down server...")
 	//create deadline to wait for

@@ -11,7 +11,7 @@
   items-center 
   justify-center 
   whitespace-nowrap 
-  rounded-md 
+  rounded 
   px-4 
   py-2 
   text-sm 
@@ -19,9 +19,11 @@
   ring-offset-background 
   transition-colors 
   focus-visible:outline-none 
-  focus-visible:ring-2 
-  focus-visible:ring-ring
-  focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  focus-visible:ring-2
+  focus-visible:ring-ring 
+  focus-visible:ring-offset-2 
+  disabled:pointer-events-none
+  disabled:opacity-50;
 }
 
 /* Default variant */
@@ -56,7 +58,7 @@
 
 /* Small size */
 .btn-sm {
-  @apply h-9 rounded-md px-3;
+  @apply h-9 px-3;
 }
 
 /* Medium size */
@@ -66,7 +68,7 @@
 
 /* Large size */
 .btn-lg {
-  @apply h-11 rounded-md px-8;
+  @apply h-11 px-8;
 }
 
 /* Icon size */

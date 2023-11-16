@@ -46,7 +46,7 @@
         </p>
         {{end}}
 
-        <div class="mt-10 flex items-center justify-center gap-x-6">
+        <div class="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-5">
           {{ range .buttons }}
           <a preload="mouseover" href="{{ .href }}" class="btn-{{ .variant }} btn-lg">{{ .label }}</a>
           {{ end }}

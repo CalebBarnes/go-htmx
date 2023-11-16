@@ -21,9 +21,7 @@ func banner() {
  / ___/__  ___  / /__ (_)__   / ___/ /__  __ _____/ /
 / /__/ _ \/ _ \/  '_// / -_) / /__/ / _ \/ // / _  / 
 \___/\___/\___/_/\_\/_/\__/  \___/_/\___/\_,_/\_,_/  
-														
-` + color.BlueString("APP_ENV: ") + color.YellowString(os.Getenv("APP_ENV"))
-
+`
 	c := color.New(color.FgCyan)
 	c.Println(str)
 }
