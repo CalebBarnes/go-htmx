@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	banner()
 	loadEnv()
+	banner()
 	postCSS()
 
 	if os.Getenv("APP_ENV") == "development" {
@@ -23,19 +23,20 @@ func loadEnv() {
 	os.Setenv("APP_ENV", "production")
 	err := godotenv.Load(".env") // load .env file
 	if err == nil {
-		println("Error loading .env file")
 		os.Setenv("APP_ENV", "development")
 	}
 
 	appEnv := os.Getenv("APP_ENV")
 	println("APP_ENV: ", appEnv)
 
+	// set default db host
 	dbHost := os.Getenv("DB_HOST")
 	if dbHost == "" {
 		os.Setenv("DB_HOST", "database")
 	}
 	println("DB_HOST: ", dbHost)
 
+	// set default port
 	port := os.Getenv("PORT")
 	if port == "" {
 		os.Setenv("PORT", "42069")

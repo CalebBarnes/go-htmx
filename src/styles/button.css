@@ -1,13 +1,75 @@
+/* Base styles for all buttons */
 .btn,
 .btn-default,
+.btn-destructive,
+.btn-outline,
+.btn-secondary,
+.btn-ghost,
 .btn-link {
-  @apply px-5 py-2;
+  @apply inline-flex 
+  h-10 
+  items-center 
+  justify-center 
+  whitespace-nowrap 
+  rounded-md 
+  px-4 
+  py-2 
+  text-sm 
+  font-medium 
+  ring-offset-background 
+  transition-colors 
+  focus-visible:outline-none 
+  focus-visible:ring-2 
+  focus-visible:ring-ring
+  focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
 }
 
+/* Default variant */
 .btn-default {
   @apply bg-primary text-primary-foreground hover:bg-primary/90;
 }
 
+/* Destructive variant */
+.btn-destructive {
+  @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+}
+
+/* Outline variant */
+.btn-outline {
+  @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+}
+
+/* Secondary variant */
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+}
+
+/* Ghost variant */
+.btn-ghost {
+  @apply hover:bg-accent hover:text-accent-foreground;
+}
+
+/* Link variant */
 .btn-link {
-  @apply underline;
+  @apply text-primary underline-offset-4 hover:underline;
+}
+
+/* Small size */
+.btn-sm {
+  @apply h-9 rounded-md px-3;
+}
+
+/* Medium size */
+.btn-md {
+  @apply h-10 px-4 py-2;
+}
+
+/* Large size */
+.btn-lg {
+  @apply h-11 rounded-md px-8;
+}
+
+/* Icon size */
+.btn-icon {
+  @apply h-10 w-10;
 }

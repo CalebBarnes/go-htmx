@@ -1,42 +1,37 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
+	"os/signal"
 	"strconv"
-	"strings"
+	"syscall"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 func server() {
 	err := initDB()
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		log.Fatalf("Failed to initialize database connection pool: %v", err)
 	}
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		pageData, err := getPageData(r.URL.Path)
-		if err != nil {
-			notFound(w, r)
-		} else {
-			pageTemplate(pageData, w, r)
-		}
-	})
+	// HTTP Route Handler for all pages
+	mux.HandleFunc("/", routeHandler)
 
-	// Handler for generated CSS files
+	// HTTP Route Handler for generated CSS files
 	cssFileServer := http.FileServer(http.Dir(".generated/css"))
 	mux.Handle("/css/", maxAgeHandler(15552000, http.StripPrefix("/css/", cssFileServer)))
 
-	// Handler for static files like favicon, robots etc
 	fileServer := http.FileServer(http.Dir("static"))
+	// HTTP Route Handler for static files like favicon, robots etc
 	mux.Handle("/static/", maxAgeHandler(15552000, http.StripPrefix("/static/", fileServer)))
-
 	mux.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/robots.txt")
 	})
@@ -45,112 +40,36 @@ func server() {
 	})
 
 	// Handler for image optimization
-	mux.Handle(ImageBaseRoute+"/", http.HandlerFunc(imageHandler))
+	mux.Handle(ImageBaseRoute+"/", maxAgeHandler(15552000, http.HandlerFunc(imageRouteHandler)))
 
-	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), mux))
-}
+	// log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), mux))
 
-func pageTemplate(pageData Page, w http.ResponseWriter, r *http.Request) {
-	versionHash := getVersionHash()
-
-	data := map[string]interface {
-	}{
-		"Version": versionHash,
-		"Seo": Seo{
-			Title:       pageData.Title,
-			Description: "This is the SEO description",
-		},
-		"Data": pageData,
+	httpServer := &http.Server{
+		Addr:    ":" + os.Getenv("PORT"),
+		Handler: mux,
 	}
 
-	getImagePropsWithContext := func(imageUrl string, otherParams ...string) template.HTMLAttr {
-		return getImageProps(r.Header, imageUrl, otherParams...)
-	}
+	stopChan := make(chan os.Signal, 1)
+	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
 
-	getImageByIdWithContext := func(id string, otherParams ...string) template.HTMLAttr {
-		imageUrl := os.Getenv("DIRECTUS_URL") + "/assets/" + id
-		return getImageProps(r.Header, imageUrl, otherParams...)
-	}
-
-	tmpl, err := template.ParseFiles("src/templates/index.go.html")
-	if err != nil {
-		log.Fatalf("Error parsing main template: %v", err)
-	}
-
-	tmpl.Funcs(template.FuncMap{
-		// Render HTML in a template without escaping it (or any other strings)
-		"noescape": func(str string) template.HTML {
-			return template.HTML(str)
-		},
-		"imageProps":         getImagePropsWithContext,
-		"directusImageProps": getImageByIdWithContext,
-	})
-
-	err = appendTemplates(tmpl, "src/components", ".go.html")
-	if err != nil {
-		log.Fatalf("Error parsing templates: %v", err)
-	}
-
-	tmpl, err = tmpl.Parse(blocksTemplateBuilder(pageData.Blocks))
-	if err != nil {
-		log.Fatalf("Error parsing block templates: %v", err)
-	}
-
-	if version == "production" {
-		w.Header().Add("Cache-Control", fmt.Sprintf("private, max-age=%d stale-while-revalidate=%d", 60, 86400))
-	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-	if err := tmpl.Execute(w, data); err != nil {
-		log.Println("Error executing template:", err)
-	}
-}
-
-func notFound(w http.ResponseWriter, r *http.Request) {
-	versionHash := getVersionHash()
-
-	tmpl := template.Must(template.ParseFiles("src/templates/404.go.html"))
-	template.Must(tmpl.ParseGlob("src/components/*.go.html"))
-	data := map[string]interface{}{
-		"Version": versionHash,
-		"Seo": Seo{
-			Title:       "404 - Page not found",
-			Description: "You've hit a dead end...",
-		},
-	}
-
-	// Set the Content-Type header
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	// Set the HTTP status code to 404
-	w.WriteHeader(http.StatusNotFound)
-	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Error executing 404 template: %v", err)
-		return
-	}
-}
-
-func blocksTemplateBuilder(blocks []Block) string {
-	blockBuilderStr := `
-	{{ define "blocks" }}
-		{{ range .Data.Blocks }}
-			{{ if eq .Collection "a" }}
-				`
-	for _, block := range blocks {
-		// Check if template file exists
-		blockFileName := strings.Replace(block.Collection, "block_", "", 1)
-		if fileExists("src/components/blocks/" + blockFileName + ".go.html") {
-			blockBuilderStr += `
-					{{ else if eq .Collection "` + block.Collection + `" }}
-						{{ template "` + block.Collection + `" .Data }}
-					`
+	go func() {
+		log.Printf("Listening on port %s\n", os.Getenv("PORT"))
+		if err := httpServer.ListenAndServe(); err != nil {
+			color.Red("Error starting server: %s\n", err)
+			log.Fatal(err)
 		}
-	}
-	blockBuilderStr += `
-			{{ end }}
-		{{ end }} 
-	{{ end }}
-	`
-	return blockBuilderStr
+	}()
+
+	// block
+	<-stopChan
+	log.Println("Shutting down server...")
+	//create deadline to wait for
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	// Doesn't block if no connections, but will otherwise wait until the timeout deadline.
+	httpServer.Shutdown(ctx)
+
+	log.Println("Server gracefully stopped")
 }
 
 func maxAgeHandler(seconds int, h http.Handler) http.Handler {
@@ -158,6 +77,43 @@ func maxAgeHandler(seconds int, h http.Handler) http.Handler {
 		w.Header().Add("Cache-Control", fmt.Sprintf("public, max-age=%d", seconds))
 		h.ServeHTTP(w, r)
 	})
+}
+
+func routeHandler(w http.ResponseWriter, r *http.Request) {
+	pageData, err := getPageData(r.URL.Path)
+	if err != nil {
+		notFound(w, r)
+	}
+	pageFound(pageData, w, r)
+}
+
+func imageRouteHandler(w http.ResponseWriter, r *http.Request) {
+	url := r.URL.Query().Get("url")
+	widthStr := r.URL.Query().Get("width")
+
+	// get all url query
+	query := r.URL.Query()
+	// println each query key and value
+	for key, value := range query {
+		fmt.Println("Key:", key, "Value:", value[0])
+	}
+
+	width, err := strconv.Atoi(widthStr)
+	if err != nil {
+		http.Error(w, "Invalid width", http.StatusBadRequest)
+		return
+	}
+
+	format := getSupportedImageFormat(r.Header)
+
+	optimizedImagePath, err := optimizeImage(url, width, format)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Serve the optimized image
+	http.ServeFile(w, r, optimizedImagePath)
 }
 
 var version string
@@ -172,20 +128,4 @@ func getVersionHash() string {
 	}
 
 	return versionHash
-}
-
-func appendTemplates(tmpl *template.Template, rootDir, suffix string) error {
-	return filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !info.IsDir() && strings.HasSuffix(path, suffix) {
-			_, err := tmpl.ParseFiles(path)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
 }
