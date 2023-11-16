@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -218,25 +217,4 @@ func convertURLToFilePath(url string) string {
 	io.WriteString(h, url)
 	hashed := fmt.Sprintf("%x", h.Sum(nil))
 	return hashed
-}
-
-func imageHandler(w http.ResponseWriter, r *http.Request) {
-	url := r.URL.Query().Get("url")
-	widthStr := r.URL.Query().Get("width")
-	width, err := strconv.Atoi(widthStr)
-	if err != nil {
-		http.Error(w, "Invalid width", http.StatusBadRequest)
-		return
-	}
-
-	format := getSupportedImageFormat(r.Header)
-
-	optimizedImagePath, err := optimizeImage(url, width, format)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Serve the optimized image
-	http.ServeFile(w, r, optimizedImagePath)
 }

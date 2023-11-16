@@ -12,8 +12,6 @@ require (
 
 require github.com/evanw/esbuild v0.19.5
 
-require github.com/h2non/bimg v1.1.9 // indirect
-
 require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-colorable v0.1.13 // indirect

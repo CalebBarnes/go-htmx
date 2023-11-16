@@ -205,7 +205,9 @@ func startBrowserSync() {
 		"'.generated/css, .generated/css/main.css, src/templates/*.html, src/components/**/*.html, src/styles/*.css'",
 		"--plugins", "bs-html-injector?files[]=*.html",
 		"--no-notify",
-		"--no-open")
+		"--no-open",
+		"--port", "3000",
+		"--ui-port", "3001")
 
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr

@@ -18,11 +18,12 @@ type Seo struct {
 }
 
 type Page struct {
-	ID     int            `db:"id"`
-	Uri    sql.NullString `db:"uri"`
-	Status string         `db:"status"`
-	Title  string         `db:"title"`
-	Blocks []Block
+	ID       int            `db:"id"`
+	Uri      sql.NullString `db:"uri"`
+	Status   string         `db:"status"`
+	Title    string         `db:"title"`
+	Template string         `db:"template"`
+	Blocks   []Block
 }
 
 type BlockData struct {
@@ -120,9 +121,9 @@ func queryPageDataFromDB(pageUrl string) (Page, error) {
 	var page Page
 	var err error
 	if pageUrl == "/" {
-		err = db.Get(&page, "SELECT id, uri, title, status FROM page WHERE uri = '' OR uri IS NULL AND status = 'published'")
+		err = db.Get(&page, "SELECT id, uri, title, status, template FROM page WHERE uri = '' OR uri IS NULL AND status = 'published'")
 	} else {
-		err = db.Get(&page, "SELECT id, uri, title, status FROM page WHERE uri = $1 AND status = 'published'", pageUrl)
+		err = db.Get(&page, "SELECT id, uri, title, status, template FROM page WHERE uri = $1 AND status = 'published'", pageUrl)
 	}
 	if err != nil {
 		return Page{}, err
