@@ -51,3 +51,14 @@ body {
     --ring: 142.4 71.8% 29.2%;
   }
 }
+
+.prose-invert {
+  p {
+    code {
+      @apply bg-card text-card-foreground;
+    }
+  }
+  pre {
+    @apply bg-card text-card-foreground;
+  }
+}
