@@ -173,23 +173,6 @@ func optimizeImage(url string, width int, format ImageFormat) (string, error) {
 	case FormatWebP:
 		color.Red("FormatWebP not supported yet")
 
-		// buffer, err := bimg.Read("image.jpg")
-		// if err != nil {
-		// 	fmt.Fprintln(os.Stderr, err)
-		// }
-
-		// newImage, err := bimg.NewImage(srcImage).Resize(800, 600)
-		// if err != nil {
-		// 	fmt.Fprintln(os.Stderr, err)
-		// }
-
-		// size, err := bimg.NewImage(newImage).Size()
-		// if size.Width == 800 && size.Height == 600 {
-		// 	fmt.Println("The image size is valid")
-		// }
-
-		// bimg.Write("new.jpg", newImage)
-
 	case FormatPNG:
 		dstImageFill := imaging.Resize(srcImage, width, 0, imaging.Lanczos)
 		err = imaging.Save(dstImageFill, imgPath)

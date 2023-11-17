@@ -27,11 +27,18 @@ func server() {
 
 	// HTTP Route Handler for generated CSS files
 	cssFileServer := http.FileServer(http.Dir(".generated/css"))
-	mux.Handle("/css/", maxAgeHandler(15552000, http.StripPrefix("/css/", cssFileServer)))
+	maxAge := 15552000
+	if os.Getenv("APP_ENV") == "development" {
+		maxAge = 0
+	}
+	mux.Handle("/css/", maxAgeHandler(maxAge, http.StripPrefix("/css/", cssFileServer)))
+	// HTTP Route Handler for generated CSS files
+	jsFileServer := http.FileServer(http.Dir(".generated/js"))
+	mux.Handle("/js/", maxAgeHandler(maxAge, http.StripPrefix("/js/", jsFileServer)))
 
-	fileServer := http.FileServer(http.Dir("static"))
 	// HTTP Route Handler for static files like favicon, robots etc
-	mux.Handle("/static/", maxAgeHandler(15552000, http.StripPrefix("/static/", fileServer)))
+	fileServer := http.FileServer(http.Dir("static")) // serves any file in /static directory
+	mux.Handle("/static/", maxAgeHandler(maxAge, http.StripPrefix("/static/", fileServer)))
 	mux.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/robots.txt")
 	})
@@ -51,13 +58,6 @@ func server() {
 	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		banner()
-		println(
-			color.BlueString(`	⚡️Cookie Go 1.0.0`) + "\n" +
-				color.WhiteString(`	- Server started at http://localhost:`+os.Getenv("PORT")) + "\n" +
-				color.WhiteString(`	- BrowserSync proxy started at http://localhost:3000`) + "\n" +
-				color.WhiteString(`	- Environment: `+os.Getenv("APP_ENV")))
-
 		if err := httpServer.ListenAndServe(); err != nil {
 			color.Red("Error starting server: %s\n", err)
 			log.Fatal(err)

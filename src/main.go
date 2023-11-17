@@ -8,13 +8,14 @@ import (
 
 func main() {
 	loadEnv()
-	postCSS()
+	banner()
 
 	if os.Getenv("APP_ENV") == "development" {
 		go watcher()
 		go startBrowserSync()
 	}
 
+	bundleAssets()
 	server()
 }
 

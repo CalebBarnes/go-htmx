@@ -15,6 +15,7 @@ func pageFound(pageData Page, w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]interface {
 	}{
+		"Env":     os.Getenv("APP_ENV"),
 		"Version": versionHash,
 		"Seo": Seo{
 			Title:       pageData.Title,
@@ -99,16 +100,8 @@ func bootstrapTemplate(r *http.Request) (*template.Template, error) {
 			return template.HTML(str)
 		},
 
-		// returns optimized srcset for images
-		"imageProps": getImagePropsWithContext,
-		// returns optimized srcset for images by their directus asset ID
+		"imageProps":         getImagePropsWithContext,
 		"directusImageProps": getImageByIdWithContext,
-
-		// todo: find <img> tags in the html and optimize them with getImageProps
-		// "processHtml": func(str string) template.HTML {
-		// 	newStr := str // do some processing here
-		// 	return template.HTML(newStr)
-		// },
 	})
 
 	// Add all templates in the components folder
