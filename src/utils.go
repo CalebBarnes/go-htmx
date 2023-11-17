@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/fatih/color"
@@ -24,12 +23,4 @@ func banner() {
 `
 	c := color.New(color.FgCyan)
 	c.Println(str)
-}
-
-func logMsg(str string) {
-	if watcherConfig.silenceLogs {
-		return
-	}
-	prefixStr := color.MagentaString("[watcher] ")
-	fmt.Println(prefixStr + str)
 }

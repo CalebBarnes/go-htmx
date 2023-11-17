@@ -17,17 +17,28 @@ import (
 type WatcherConfig struct {
 	directories []string
 	includedExt []string
-	silenceLogs bool
 }
 
 var watcherConfig = WatcherConfig{
-	// directories: []string{"src/templates", "src/components", "src/styles"},
-	directories: []string{"src/templates", "src/components", "src/styles"},
-	includedExt: []string{".html", ".css"},
-	silenceLogs: false,
+	directories: []string{
+		"src/ts",
+		"src/custom-elements",
+		"src/templates",
+		"src/components",
+		"src/styles",
+	},
+	includedExt: []string{".html", ".css", ".ts"},
+}
+
+// * src/templates/*.html, src/components/**/*.html, src/styles/*.css
+
+func logMsg(str string) {
+	prefixStr := color.MagentaString("[watcher] ")
+	fmt.Println(prefixStr + str)
 }
 
 func watcher() {
+
 	logMsg(color.GreenString("Watching directories..."))
 
 	// Create new watcher.
@@ -86,10 +97,10 @@ func handleEvent(event fsnotify.Event, watcher *fsnotify.Watcher) {
 		for _, ext := range watcherConfig.includedExt {
 			if filepath.Ext(event.Name) == ext {
 				logMsg(color.MagentaString("created: " + event.Name))
-				if ext == ".css" {
-					go postCSS()
-				} else {
-					go postCSS()
+
+				go postCSS()
+				if ext == ".ts" {
+					go bundleJs()
 				}
 				return
 			}
@@ -111,10 +122,9 @@ func handleEvent(event fsnotify.Event, watcher *fsnotify.Watcher) {
 		for _, ext := range watcherConfig.includedExt {
 			if filepath.Ext(event.Name) == ext {
 				logMsg(color.MagentaString("update: " + event.Name))
-				if ext == ".css" {
-					go postCSS()
-				} else {
-					go postCSS()
+				go postCSS()
+				if ext == ".ts" {
+					go bundleJs()
 				}
 				return
 			}
@@ -170,6 +180,32 @@ func postCSS() {
 		return
 	}
 
+	if _, err := os.Stat(".generated/css/main.css"); err == nil {
+		// file exists
+		println("file exists at .generated/css/main.css")
+		// read contents
+		contents, err := os.ReadFile(".generated/css/main.css")
+		if err == nil {
+
+			f, err := os.OpenFile(outputPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				println("error opening file")
+				log.Println(err)
+			}
+			println("opened file " + outputPath)
+			defer f.Close()
+
+			_, err = f.Write(contents)
+			if err != nil {
+				log.Println(err)
+			} else {
+				println("wrote contents to " + outputPath)
+			}
+
+		}
+
+	}
+
 	esbuildCSS()
 	logMsg(color.GreenString("CSS generated %0.2fms", time.Since(start).Seconds()*1000))
 }
@@ -189,21 +225,25 @@ func esbuildCSS() {
 	if len(result.Errors) > 0 {
 		logMsg(color.RedString("Error esbuildCSS:"))
 		os.Stderr.WriteString(result.Errors[0].Text)
-		// os.Exit(1)
 	}
 }
 
 func startBrowserSync() {
-	cmd := exec.Command(
-		"./node_modules/.bin/browser-sync", "start",
-		"--proxy", "localhost:"+os.Getenv("PORT"),
+	filesToWatch := "src"
+
+	cmdArgs := []string{"start",
+		"--proxy", "localhost:" + os.Getenv("PORT"),
 		"--files",
-		"'.generated/css, .generated/css/main.css, src/templates/*.html, src/components/**/*.html, src/styles/*.css'",
+		filesToWatch,
 		"--plugins", "bs-html-injector?files[]=*.html",
 		"--no-notify",
 		"--no-open",
 		"--port", "3000",
-		"--ui-port", "3001")
+		"--ui-port", "3001",
+	}
+
+	cmd := exec.Command(
+		"./node_modules/.bin/browser-sync", cmdArgs...)
 
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -213,4 +253,29 @@ func startBrowserSync() {
 		color.Red(fmt.Sprint(cmdErr) + ": " + stderr.String())
 		return
 	}
+}
+
+func bundleJs() {
+	start := time.Now()
+
+	result := api.Build(api.BuildOptions{
+		EntryPoints:       []string{"src/ts/app.ts"},
+		Bundle:            true,
+		Outfile:           ".generated/esbuild/bundle.js",
+		Write:             true,
+		Target:            api.ESNext,
+		MinifySyntax:      true,
+		MinifyWhitespace:  true,
+		MinifyIdentifiers: true,
+	})
+
+	if len(result.Errors) > 0 {
+		for _, err := range result.Errors {
+			logMsg(color.RedString("Error bundleJs:"))
+			os.Stderr.WriteString(err.Text)
+		}
+
+	}
+
+	logMsg(color.GreenString("JS generated %0.2fms", time.Since(start).Seconds()*1000))
 }

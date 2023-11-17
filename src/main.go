@@ -8,6 +8,7 @@ import (
 
 func main() {
 	loadEnv()
+	bundleJs()
 	postCSS()
 
 	if os.Getenv("APP_ENV") == "development" {
