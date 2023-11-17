@@ -16,7 +16,7 @@ func bundleAssets() {
 
 	postCSS("src/styles/main.css", "tmp/postcss/bundled.css")
 
-	// esbuild -> bundles js and any css that is imported in ts
+	// esbuild -> bundles ts and any css that was imported in ts
 	result := api.Build(api.BuildOptions{
 		EntryPoints:       []string{"src/ts/app.ts"},
 		Bundle:            true,
