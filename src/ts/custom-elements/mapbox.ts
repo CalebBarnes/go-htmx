@@ -2,8 +2,6 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 export class MapBoxElement extends HTMLElement {
-  static observedAttributes = ["accessToken"];
-
   constructor() {
     super();
   }

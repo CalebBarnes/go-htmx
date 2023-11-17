@@ -1,27 +1,24 @@
-<!-- {{ define "inject_head" }}
-<script>
-    console.log("This is the contact page. It loads its own script with the inject_head template!");
-</script>
-{{ end }} -->
+{{ define "inject_head"}}
+  <!-- Custom Web Components -->
+  <script defer src="/js/app.js?v={{ .Version }}"></script>
 
+{{ end }}
 {{ define "content" }}
-<div class="edges mt-24">
+<div class="edges mt-12">
+  <h1>This is the contact page template</h1>
 
-    <h1 class="mb-2">This is the contact page template</h1>
+  <p class="mb-10">
+    Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
+    voluptatum. Quisquam, voluptatum.
+  </p>
 
-    <p class="mb-10">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, voluptatum. Quisquam, voluptatum.
-    </p>
+  <mapbox-element
+    accessToken="pk.eyJ1IjoiY2FsZWJiYXJuZXMiLCJhIjoiY2xnNXg1YjA0MDY2cDNkcjBnNTRxbnM3NiJ9.4G8Hgqc0RqhklCFi2Rrp5g"
+  ></mapbox-element>
 
-    <div class="w-full h-[300px] relative my-10">
-        <img class="object-contain" {{
-            imageProps "https://images.unsplash.com/photo-1682687981630-cefe9cd73072" "layout=fill" }} />
-    </div>
-
-    <mapbox-element
-        accessToken="pk.eyJ1IjoiY2FsZWJiYXJuZXMiLCJhIjoiY2xnNXg1YjA0MDY2cDNkcjBnNTRxbnM3NiJ9.4G8Hgqc0RqhklCFi2Rrp5g"></mapbox-element>
-
-
-
+  <div class="w-full h-[300px] relative my-10">
+    <img class="object-contain" {{
+        imageProps "https://images.unsplash.com/photo-1682687981630-cefe9cd73072" "layout=fill" }} />
+</div>
 </div>
 {{ end }}

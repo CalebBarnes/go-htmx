@@ -33,8 +33,8 @@ func server() {
 	}
 	mux.Handle("/css/", maxAgeHandler(maxAge, http.StripPrefix("/css/", cssFileServer)))
 	// HTTP Route Handler for generated CSS files
-	generatedFileServer := http.FileServer(http.Dir(".generated"))
-	mux.Handle("/.generated/", maxAgeHandler(maxAge, http.StripPrefix("/.generated/", generatedFileServer)))
+	jsFileServer := http.FileServer(http.Dir(".generated/js"))
+	mux.Handle("/js/", maxAgeHandler(maxAge, http.StripPrefix("/js/", jsFileServer)))
 
 	// HTTP Route Handler for static files like favicon, robots etc
 	fileServer := http.FileServer(http.Dir("static")) // serves any file in /static directory
@@ -58,13 +58,6 @@ func server() {
 	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		banner()
-		println(
-			color.BlueString(`	⚡️Cookie Go 1.0.0`) + "\n" +
-				color.WhiteString(`	- Server started at http://localhost:`+os.Getenv("PORT")) + "\n" +
-				color.WhiteString(`	- BrowserSync proxy started at http://localhost:3000`) + "\n" +
-				color.WhiteString(`	- Environment: `+os.Getenv("APP_ENV")))
-
 		if err := httpServer.ListenAndServe(); err != nil {
 			color.Red("Error starting server: %s\n", err)
 			log.Fatal(err)

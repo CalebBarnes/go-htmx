@@ -1,11 +1,11 @@
 root = "."
-testdata_dir = "testdata"
+# testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
   args_bin = []
   delay = 1000
-  exclude_dir = ["assets", "tmp", "vendor", "testdata", ".dist", ".git", "node_modules"]
+  exclude_dir = ["assets", "tmp", "vendor", ".dist", ".git", "node_modules"]
   exclude_file = []
   exclude_regex = ["_test.go"]
   exclude_unchanged = false
@@ -13,9 +13,7 @@ tmp_dir = "tmp"
   cmd = "go build -o ./tmp/main ./src/*.go"
   full_bin = "./tmp/main"
   include_dir = ["src"]
-  include_ext = ["go", "tpl", "tmpl", 
-  # "html"
-  ]
+  include_ext = ["go", "tpl", "tmpl"]
   include_file = []
   kill_delay = "0s"
   log = "air.log"

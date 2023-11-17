@@ -12,25 +12,34 @@
   {{ end }}
   <link rel="icon" type="image/x-icon" href="/favicon.ico?v={{ .Version }}" />
 
-  <!-- Custom Web Components -->
-  <link rel="stylesheet" href="/.generated/esbuild/bundle.css?v={{ .Version }}" />
-  <script defer src="/.generated/esbuild/bundle.js?v={{ .Version }}"></script>
-
   <!-- HTMX -->
-  <script defer src="https://unpkg.com/htmx.org@1.9.7/dist/htmx.min.js"></script>
-  <script defer src="https://unpkg.com/htmx.org@1.9.7/dist/ext/preload.js"></script>
-  <script defer src="https://unpkg.com/htmx.org/dist/ext/head-support.js"></script>
+  <script
+    defer
+    src="https://unpkg.com/htmx.org@1.9.7/dist/htmx.min.js"
+  ></script>
+  <script
+    defer
+    src="https://unpkg.com/htmx.org@1.9.7/dist/ext/preload.js"
+  ></script>
+  <script
+    defer
+    src="https://unpkg.com/htmx.org/dist/ext/head-support.js"
+  ></script>
 
   <!-- deferred loading of google font css -->
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter&display=swap" as="style"
-    onload="this.onload=null;this.rel='stylesheet'" />
+  <link
+    rel="preload"
+    href="https://fonts.googleapis.com/css2?family=Inter&display=swap"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
   <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter&display=swap" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter&display=swap"
+    />
   </noscript>
 
   {{ template "inject_head" . }}
 </head>
-{{ end }}
-
-{{ define "auto_load_scripts"}} {{ end }}
-{{ define "inject_head" }}{{ end }}
+{{ end }} {{ define "inject_head" }}{{ end }}

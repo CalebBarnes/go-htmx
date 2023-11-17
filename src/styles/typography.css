@@ -3,7 +3,7 @@ html {
 }
 
 h1 {
-  @apply text-4xl;
+  @apply text-5xl;
 }
 
 h2 {
@@ -32,7 +32,7 @@ h3,
 h4,
 h5,
 h6 {
-  @apply font-extrabold;
+  @apply mb-5 font-extrabold;
 }
 
 p {
