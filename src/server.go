@@ -14,7 +14,13 @@ import (
 	"github.com/fatih/color"
 )
 
+var assetMaxAge = 15552000
+
 func server() {
+	// if os.Getenv("APP_ENV") == "development" {
+	// 	assetMaxAge = 0
+	// }
+
 	err := initDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database connection pool: %v", err)
@@ -27,18 +33,15 @@ func server() {
 
 	// HTTP Route Handler for generated CSS files
 	cssFileServer := http.FileServer(http.Dir(".generated/css"))
-	maxAge := 15552000
-	if os.Getenv("APP_ENV") == "development" {
-		maxAge = 0
-	}
-	mux.Handle("/css/", maxAgeHandler(maxAge, http.StripPrefix("/css/", cssFileServer)))
+	mux.Handle("/css/", maxAgeHandler(assetMaxAge, http.StripPrefix("/css/", cssFileServer)))
+
 	// HTTP Route Handler for generated CSS files
 	jsFileServer := http.FileServer(http.Dir(".generated/js"))
-	mux.Handle("/js/", maxAgeHandler(maxAge, http.StripPrefix("/js/", jsFileServer)))
+	mux.Handle("/js/", maxAgeHandler(assetMaxAge, http.StripPrefix("/js/", jsFileServer)))
 
 	// HTTP Route Handler for static files like favicon, robots etc
 	fileServer := http.FileServer(http.Dir("static")) // serves any file in /static directory
-	mux.Handle("/static/", maxAgeHandler(maxAge, http.StripPrefix("/static/", fileServer)))
+	mux.Handle("/static/", maxAgeHandler(assetMaxAge, http.StripPrefix("/static/", fileServer)))
 	mux.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/robots.txt")
 	})
@@ -127,7 +130,7 @@ func getVersionHash() string {
 
 	if os.Getenv("APP_ENV") == "development" {
 		versionHash = strconv.FormatInt(time.Now().UnixNano(), 10)
-	} else if version == "" {
+	} else if os.Getenv("APP_ENV") == "production" {
 		versionHash = version
 	}
 
