@@ -1,10 +1,6 @@
 import { Component } from "@/core/component";
 
-export type Components = {
-  [componentName: string]: (props: any, render: () => void) => void;
-};
-
-export function registerComponents(components: Components) {
+export function registerComponents(components: any) {
   for (const key in components) {
     const component = components[key];
 

@@ -1,5 +1,6 @@
 import "mapbox-gl/dist/mapbox-gl.css";
 import mapboxgl from "mapbox-gl";
+import { Render } from "@/core/component";
 
 type MapboxProps = {
   id: string;
@@ -13,8 +14,8 @@ type MapboxProps = {
   spin: boolean;
 };
 
-export function MapboxComponent(
-  {
+export function MapboxComponent(props: MapboxProps, render: Render) {
+  const {
     id = "mapbox-container",
     mapStyle = "mapbox://styles/mapbox/streets-v12",
     center = [0, 0],
@@ -24,9 +25,8 @@ export function MapboxComponent(
     lat,
     lng,
     spin = true,
-  }: MapboxProps,
-  render: (str: string) => void,
-) {
+  } = props;
+
   render(
     /*html*/ `<div id="${id}" class="h-full w-full animate-fade-in"></div>`,
   );

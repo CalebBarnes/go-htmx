@@ -1,7 +1,3 @@
-type ComponentProps = {
-  [key: string]: any;
-};
-
 export class Component extends HTMLElement {
   constructor() {
     super();
@@ -54,3 +50,8 @@ export class Component extends HTMLElement {
     }
   }
 }
+
+/**
+ * @param str HTML string to render
+ */
+export type Render = (str: string) => void;
