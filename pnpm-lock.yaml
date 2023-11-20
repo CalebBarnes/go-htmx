@@ -11,6 +11,9 @@ dependencies:
   '@tailwindcss/typography':
     specifier: ^0.5.10
     version: 0.5.10(tailwindcss@3.3.5)
+  htmx.org:
+    specifier: ^1.9.8
+    version: 1.9.8
   mapbox-gl:
     specifier: ^2.15.0
     version: 2.15.0
@@ -1057,6 +1060,10 @@ packages:
       inherits: 2.0.4
       readable-stream: 3.6.2
     dev: true
+
+  /htmx.org@1.9.8:
+    resolution: {integrity: sha512-eH825QM6yJ1AeHTJgUxy3xnXnP/uXD56x52/VYnQ9CMw+o9H04ar/GY5PHuiZeelsqLK4wkviVdCel7u+3h4Fw==}
+    dev: false
 
   /http-errors@1.6.3:
     resolution: {integrity: sha512-lks+lVC8dgGyh97jxvxeYTWQFvh4uw4yC12gVl63Cg30sjPX4wuGcdkICVXDAESr6OJGjqGA8Iz5mkeN6zlD7A==}

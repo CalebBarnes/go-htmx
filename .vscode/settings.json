@@ -7,12 +7,11 @@
     "**/.DS_Store": true,
     "**/Thumbs.db": true,
     "**/node_modules": true,
-    // "tmp": true,
-    "**/bin": true,
+    "tmp": true,
     "main": true
   },
   "search.exclude": {
-    ".generated": true,
+    ".generated/**": true,
     "**/node_modules": true,
     "**/bower_components": true,
     "**/tmp": true,
@@ -23,8 +22,7 @@
     "**/CVS": true,
     "**/.DS_Store": true,
     "**/Thumbs.db": true,
-    "**/.gitignore": true,
-    "**/bin": true
+    "**/.gitignore": true
   },
   "css.customData": [".vscode/tailwind.json"]
   // "workbench.colorCustomizations": {

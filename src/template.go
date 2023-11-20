@@ -24,14 +24,9 @@ func pageFound(pageData Page, w http.ResponseWriter, r *http.Request) {
 		"Data": pageData,
 	}
 
-	var templateName string
-	if pageData.Template == "" || pageData.Template == "default" {
-		templateName = "index"
-	} else {
-		templateName = pageData.Template
-	}
+	templateName := getTemplateName(pageData.Template)
 
-	tmpl, err := bootstrapTemplate(r)
+	tmpl, err := bootstrapTemplate(r, pageData)
 	if err != nil {
 		log.Fatalf("Error bootstrapping template: %v", err)
 	}
@@ -56,7 +51,7 @@ func pageFound(pageData Page, w http.ResponseWriter, r *http.Request) {
 func notFound(w http.ResponseWriter, r *http.Request) {
 	versionHash := getVersionHash()
 
-	tmpl, err := bootstrapTemplate(r)
+	tmpl, err := bootstrapTemplate(r, Page{})
 	if err != nil {
 		log.Fatalf("Error bootstrapping template: %v", err)
 	}
@@ -82,7 +77,7 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 }
 
 // Bootstrap the template with some global functions and components
-func bootstrapTemplate(r *http.Request) (*template.Template, error) {
+func bootstrapTemplate(r *http.Request, pageData Page) (*template.Template, error) {
 	getImagePropsWithContext := func(imageUrl string, otherParams ...string) template.HTMLAttr {
 		return getImageProps(r.Header, imageUrl, otherParams...)
 	}
@@ -103,6 +98,44 @@ func bootstrapTemplate(r *http.Request) (*template.Template, error) {
 		"imageProps":         getImagePropsWithContext,
 		"directusImageProps": getImageByIdWithContext,
 	})
+
+	templateName := getTemplateName(pageData.Template)
+	var autoLoadBodyStr string
+	var autoLoadHeadStr string
+
+	if fileExists(".generated/esbuild/templates/" + templateName + ".js") {
+		autoLoadBodyStr += `
+		<script defer src="/bundle/` + templateName + `.js?v={{.Version}}"></script>
+		`
+	}
+	if fileExists(".generated/esbuild/templates/" + templateName + ".css") {
+		autoLoadBodyStr += `
+		<link rel="stylesheet" href="/bundle/` + templateName + `.css?v={{.Version}}" />
+		`
+	}
+	if fileExists(".generated/esbuild/templates/app.js") {
+		autoLoadHeadStr += `
+		<script defer src="/bundle/app.js?v={{.Version}}"></script>
+		`
+	}
+
+	if googleFontsInline != "" {
+		autoLoadHeadStr += `
+		<style>
+			` + googleFontsInline + `
+		</style>
+		`
+	}
+	tmpl.Parse(`
+	{{ define "autoload_head" }}
+		` + autoLoadHeadStr + `
+	{{ end }}
+	`)
+	tmpl.Parse(`
+	{{ define "autoload_body_scripts" }}
+		` + autoLoadBodyStr + `
+	{{ end }}
+	`)
 
 	// Add all templates in the components folder
 	err := appendTemplates(tmpl, "src/components", ".go.html")
@@ -152,4 +185,11 @@ func appendTemplates(tmpl *template.Template, rootDir, suffix string) error {
 		}
 		return nil
 	})
+}
+
+func getTemplateName(templateName string) string {
+	if templateName == "" || templateName == "default" {
+		templateName = "index"
+	}
+	return templateName
 }

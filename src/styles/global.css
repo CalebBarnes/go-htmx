@@ -6,10 +6,6 @@ body {
   @apply bg-background text-foreground;
 }
 
-.block-text {
-  @apply prose;
-}
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -34,7 +30,8 @@ body {
     --radius: rem;
   }
 
-  .dark {
+  .dark,
+  :root[class~="dark"] {
     --background: 20 14.3% 4.1%;
     --foreground: 0 0% 95%;
     --card: 24 9.8% 10%;
@@ -55,4 +52,15 @@ body {
     --input: 240 3.7% 15.9%;
     --ring: 142.4 71.8% 29.2%;
   }
+  .block-text {
+    @apply prose prose-invert;
+  }
 }
+
+/* not dark: */
+/* 
+@layer components {
+  .block-text {
+    @apply prose prose-indigo;
+  }
+} */

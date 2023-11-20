@@ -36,8 +36,8 @@ func server() {
 	mux.Handle("/css/", maxAgeHandler(assetMaxAge, http.StripPrefix("/css/", cssFileServer)))
 
 	// HTTP Route Handler for generated CSS files
-	jsFileServer := http.FileServer(http.Dir(".generated/js"))
-	mux.Handle("/js/", maxAgeHandler(assetMaxAge, http.StripPrefix("/js/", jsFileServer)))
+	esbuildFileServer := http.FileServer(http.Dir(".generated/esbuild/templates"))
+	mux.Handle("/bundle/", maxAgeHandler(assetMaxAge, http.StripPrefix("/bundle/", esbuildFileServer)))
 
 	// HTTP Route Handler for static files like favicon, robots etc
 	fileServer := http.FileServer(http.Dir("static")) // serves any file in /static directory
@@ -101,8 +101,9 @@ func imageRouteHandler(w http.ResponseWriter, r *http.Request) {
 	// get all url query
 	query := r.URL.Query()
 	// println each query key and value
+	// serverLogger("Image URL: " + url)
 	for key, value := range query {
-		fmt.Println("Key:", key, "Value:", value[0])
+		serverLogger(key + ": " + value[0])
 	}
 
 	width, err := strconv.Atoi(widthStr)

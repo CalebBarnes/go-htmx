@@ -12,20 +12,6 @@
   {{ end }}
   <link rel="icon" type="image/x-icon" href="/favicon.ico?v={{ .Version }}" />
 
-  <!-- HTMX -->
-  <script
-    defer
-    src="https://unpkg.com/htmx.org@1.9.7/dist/htmx.min.js"
-  ></script>
-  <script
-    defer
-    src="https://unpkg.com/htmx.org@1.9.7/dist/ext/preload.js"
-  ></script>
-  <script
-    defer
-    src="https://unpkg.com/htmx.org/dist/ext/head-support.js"
-  ></script>
-
   <!-- deferred loading of google font css -->
   <link
     rel="preload"
@@ -40,6 +26,7 @@
     />
   </noscript>
 
-  {{ template "inject_head" . }}
+  {{ template "inject_head" . }} {{ template "autoload_head" . }}
 </head>
-{{ end }} {{ define "inject_head" }}{{ end }}
+{{ end }} {{ define "inject_head" }}{{ end }} {{ define "autoload_head" }} {{
+end }}

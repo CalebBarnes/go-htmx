@@ -1,16 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 
 <html lang="en" class="h-full">
-{{ template "head" . }}
+  {{ template "head" . }}
 
-<body hx-ext="preload" class="flex min-h-screen flex-col justify-between">
+  <body
+    hx-ext="preload"
+    class="dark flex min-h-screen flex-col justify-between scroll-smooth focus:scroll-auto"
+  >
+    {{ template "autoload_body_scripts" . }}
     <div>
-        {{ template "navbar" . }}
+      {{ template "navbar" . }}
 
-        <main>{{ template "content" . }}</main>
+      <main class="mt-[90px]">{{ template "content" . }}</main>
 
-        {{ template "footer" . }}
+      {{ template "footer" . }}
     </div>
-</body>
-
+  </body>
 </html>
+{{ define "autoload_body_scripts" }} {{ end }}

@@ -1,24 +1,42 @@
-{{ define "inject_head"}}
-  <!-- Custom Web Components -->
-  <script defer src="/js/app.js?v={{ .Version }}"></script>
-
-{{ end }}
 {{ define "content" }}
-<div class="edges mt-12">
+<div class="pointer-events-none h-screen min-h-[300px] max-h-[60svh]">
+  <mapbox-component
+    access-token="pk.eyJ1IjoiY2FsZWJiYXJuZXMiLCJhIjoiY2xnNXg1YjA0MDY2cDNkcjBnNTRxbnM3NiJ9.4G8Hgqc0RqhklCFi2Rrp5g"
+    zoom="2"
+    controls
+    center="[-90, 40]"
+    lat="49.28"
+    lng="-123.12"
+  ></mapbox-component>
+</div>
+
+<div class="edges mt-12 relative">
   <h1>This is the contact page template</h1>
 
-  <p class="mb-10">
-    Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
-    voluptatum. Quisquam, voluptatum.
+  <p class="mb-10 max-w-2xl">
+    Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam
+    voluptatibus, quibusdam, quia, voluptatem voluptatum quod quos
+    voluptates quas doloribus quidem natus. Quisquam voluptatibus,
+    quibusdam, quia, voluptatem voluptatum quod quos voluptates quas
+    doloribus quidem natus.
   </p>
 
-  <mapbox-element
-    accessToken="pk.eyJ1IjoiY2FsZWJiYXJuZXMiLCJhIjoiY2xnNXg1YjA0MDY2cDNkcjBnNTRxbnM3NiJ9.4G8Hgqc0RqhklCFi2Rrp5g"
-  ></mapbox-element>
+  <example-component world="World" another-attribute="What's up?"></example-component>
+  <example-timer world="World" another-attribute="What's up?"></example-timer>
+    
+  <div class="max-w-md">
+    <h2 class="mb-4">Contact Form</h2>
+    <form id="my-test-form">
+      <input name="name" type="text" placeholder="Name" class="w-full mb-4 p-2" />
+      <input name="email" type="email" placeholder="you@example.com" class="w-full mb-4 p-2" />
+      <button class="btn btn-default">Submit</button>
+    </form>
+  </div>
 
-  <div class="w-full h-[300px] relative my-10">
-    <img class="object-contain" {{
-        imageProps "https://images.unsplash.com/photo-1682687981630-cefe9cd73072" "layout=fill" }} />
-</div>
+  <div>
+    <div class="w-full max-w-md relative my-10">
+      <img class="object-contain" {{ imageProps "https://images.unsplash.com/photo-1682687981630-cefe9cd73072"  }} />
+    </div>
+  </div>
 </div>
 {{ end }}

@@ -56,6 +56,13 @@ func bundlerLogger(str string) {
 	})
 }
 
+func serverLogger(str string) {
+	logger(LoggerConfig{
+		prefix: color.HiGreenString("⚡️[server] "),
+		str:    color.HiCyanString(str),
+	})
+}
+
 func startBrowserSync() {
 	filesToWatch := "src"
 
