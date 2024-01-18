@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "$(go env GOPATH)/bin/air & open http://localhost:3000",
     "build": "go build -o main -ldflags \"-X 'main.version=$(git rev-parse HEAD)'\" ./src",
-    "start": "pnpm install && go mod tidy && npm run build && ./main",
+    "start": "./main",
     "prestart": "git config --global --add safe.directory /app",
     "kill": "lsof -ti tcp:3000 | xargs kill -9 && lsof -ti tcp:42069 | xargs kill -9"
   },
