@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "$(go env GOPATH)/bin/air & open http://localhost:3000",
     "build": "go build -o main -ldflags \"-X 'main.version=$(git rev-parse HEAD)'\" ./src",
-    "start": "npm run build && ./main",
+    "start": "pnpm install && go mod tidy && npm run build && ./main",
     "prestart": "git config --global --add safe.directory /app",
     "kill": "lsof -ti tcp:3000 | xargs kill -9 && lsof -ti tcp:42069 | xargs kill -9"
   },
@@ -27,6 +27,7 @@
     "bs-html-injector": "^3.0.3",
     "postcss": "^8.4.31",
     "postcss-cli": "^10.1.0",
+    "postcss-import": "^16.0.0",
     "prettier": "^3.0.3",
     "prettier-plugin-tailwindcss": "^0.5.6",
     "tailwindcss": "^3.3.5"
