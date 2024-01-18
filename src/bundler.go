@@ -12,8 +12,6 @@ import (
 	"github.com/fatih/color"
 )
 
-var googleFontsInline string
-
 func bundleAssets() {
 	start := time.Now()
 
@@ -136,23 +134,3 @@ func pruneOldFiles(esbuildResult api.BuildResult) {
 		// bundlerLogger(fmt.Sprintf("current existing files: %s", filePath))
 	}
 }
-
-// func getGoogleFont(url string) {
-// 	// get this file and read the contents
-// 	resp, err := http.Get(url)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer resp.Body.Close()
-
-// 	// read the body into a byte array
-// 	body, err := io.ReadAll(resp.Body)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	// convert to string
-// 	bodyStr := string(body)
-// 	bundlerLogger(bodyStr)
-// 	googleFontsInline = bodyStr
-// }

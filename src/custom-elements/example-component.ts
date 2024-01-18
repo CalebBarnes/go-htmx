@@ -4,7 +4,7 @@ export function ExampleComponent(props: {
   world: string;
   anotherAttribute: string;
 }) {
-  return /*html*/ `
+  return /* HTML */ `
   <div class="block-text border border-red-500 p-5">
     <h1>Example Function Client Component</h1>
     <h4>Hello, ${props.world}!</h4>
@@ -19,7 +19,10 @@ export function ExampleComponent(props: {
   </div>`;
 }
 
-export function ExampleTimerComponent(_: any, render: Render) {
+export function ExampleTimerComponent(props: {
+  world: string;
+  anotherAttribute: string;
+}, render: Render) {
   let time = new Date().toLocaleTimeString();
 
   const renderHtml = () => {
@@ -27,6 +30,8 @@ export function ExampleTimerComponent(_: any, render: Render) {
           <div class="block-text border border-red-500 p-5">
             <h4>Time:</h4>
             <p class="animate-fade-in">${time}</p>
+            <h4>Props:</h4>
+            <pre><code>${JSON.stringify(props, null, 2)}</code></pre>
           </div>`);
   };
 

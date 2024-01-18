@@ -1,3 +1,7 @@
+type ComponentProps = {
+  [key: string]: boolean | number | string | object | Array<any>;
+};
+
 export class Component extends HTMLElement {
   constructor() {
     super();
@@ -39,6 +43,10 @@ export class Component extends HTMLElement {
 
   public render(str: string) {
     this.innerHTML = str;
+  }
+
+  mount(): string | void {
+    // Default implementation (if applicable)
   }
 
   connectedCallback() {

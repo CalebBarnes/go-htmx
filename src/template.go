@@ -119,13 +119,6 @@ func bootstrapTemplate(r *http.Request, pageData Page) (*template.Template, erro
 		`
 	}
 
-	if googleFontsInline != "" {
-		autoLoadHeadStr += `
-		<style>
-			` + googleFontsInline + `
-		</style>
-		`
-	}
 	tmpl.Parse(`
 	{{ define "autoload_head" }}
 		` + autoLoadHeadStr + `
@@ -153,6 +146,7 @@ func blocksTemplateBuilder(blocks []Block) string {
 		{{ range .Data.Blocks }}
 			{{ if eq .Collection "a" }}
 				`
+
 	for _, block := range blocks {
 		// Check if template file exists
 		blockFileName := strings.Replace(block.Collection, "block_", "", 1)
@@ -163,6 +157,7 @@ func blocksTemplateBuilder(blocks []Block) string {
 					`
 		}
 	}
+
 	blockBuilderStr += `
 			{{ end }}
 		{{ end }} 
