@@ -21,6 +21,15 @@
     doloribus quidem natus.
   </p>
 
+  <div hx-ws="connect:/ws">
+    <div id="messages">
+      ...
+    </div>
+    <form hx-ws="send">
+        <input name="message">
+    </form>
+  </div>
+
   <example-component world="World" another-attribute="What's up?"></example-component>
   <example-timer world="World" another-attribute="What's up?"></example-timer>
     

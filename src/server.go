@@ -17,10 +17,6 @@ import (
 var assetMaxAge = 15552000
 
 func server() {
-	// if os.Getenv("APP_ENV") == "development" {
-	// 	assetMaxAge = 0
-	// }
-
 	err := initDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database connection pool: %v", err)
@@ -30,7 +26,9 @@ func server() {
 
 	// HTTP Route Handler for all pages
 	mux.HandleFunc("/", routeHandler)
-
+	mux.HandleFunc("/ws", websocketConnectionHandler)
+	go handleMessages() // start the goroutine to handle messages from the websockets broadcast channel
+	go broadcastRandomWord()
 	// HTTP Route Handler for generated CSS files
 	cssFileServer := http.FileServer(http.Dir(".generated/css"))
 	mux.Handle("/css/", maxAgeHandler(assetMaxAge, http.StripPrefix("/css/", cssFileServer)))
